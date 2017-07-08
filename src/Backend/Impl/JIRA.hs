@@ -22,24 +22,20 @@ import           Data.Aeson.Types      (Parser, parseEither)
 import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy  as Lazy
 import           Data.String.Conv
-import           Network.HTTP.Client   hiding (responseStatus)
+import           Network.HTTP.Client
 
 import           Backend
 import           Shared.Client
 import           Tracker.Types
 
-me :: Config
-me = Config
-  { baseURL = "http://camelot.bluemango.nl"
-  , user = "bart.frenk"
-  , password = "5@^ZYI*A7d"
-  }
-
-jql :: JQL
-jql = JQL
-  "sprint in openSprints() \
-  \and sprint not in futureSprints() \
-  \and project=LemonPI"
+withHandle :: Config -> (Backend.Handle IO -> IO a) -> IO a
+withHandle config consumer = do
+  env <- mkDefaultClientEnv config
+  let handle = Backend.Handle
+        { book = \item -> runClient (bookM item) env
+        , search = \jql page -> runClient (searchM jql page) env
+        }
+  consumer handle
 
 searchM :: ClientMonad m => JQL -> Page -> m [Issue]
 searchM jql page =
