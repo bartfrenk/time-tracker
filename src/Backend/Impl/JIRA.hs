@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 {-# LANGUAGE ConstraintKinds       #-}
@@ -11,7 +12,11 @@
 {-# LANGUAGE StrictData            #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Backend.Impl.JIRA where
+module Backend.Impl.JIRA
+  ( module Backend.Impl.JIRA
+  , ClientEnv
+  , runClientT
+  ) where
 
 import           BasicPrelude
 import           Control.Lens
@@ -28,16 +33,7 @@ import           Backend
 import           Shared.Client
 import           Tracker.Types
 
-withHandle :: Config -> (Backend.Handle IO -> IO a) -> IO a
-withHandle config consumer = do
-  env <- mkDefaultClientEnv config
-  let handle = Backend.Handle
-        { book = \item -> runClient (bookM item) env
-        , search = \jql page -> runClient (searchM jql page) env
-        }
-  consumer handle
-
-searchM :: ClientMonad m => JQL -> Page -> m [Issue]
+searchM :: MonadClient m => JQL -> Page -> m [Issue]
 searchM jql page =
   mkSearchRequest jql page >>= http >>= parseSearchResponse
 
@@ -66,9 +62,8 @@ parseSearchResponse response =
           <*> ((v .: "fields") >>= (.: "summary"))
           <*> ((v .: "fields") >>= (.: "customfield_10002"))
 
-bookM :: ClientMonad m => LogItem -> m ()
+bookM :: MonadClient m => LogItem -> m ()
 bookM = undefined
-
 
 parseThrow :: MonadThrow m => (a -> Parser b) -> a -> m b
 parseThrow p v = case parseEither p v of

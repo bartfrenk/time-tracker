@@ -4,29 +4,25 @@
 
 module Tracker.State where
 
-import           Control.Monad.Except
-import           Control.Monad.State
-import           Control.Monad.Trans  (MonadIO)
-import           Data.Bifunctor       (first)
-import           Data.Time.Clock      (diffUTCTime)
-import           Data.Time.LocalTime
+import           Control.Exception
+import           Control.Monad.Catch
+import           Control.Monad.State hiding (state)
+import           Control.Monad.Trans (MonadIO)
+import           Data.Bifunctor      (first)
+import           Data.Typeable
 import           Safe
-import           System.Directory     (doesFileExist)
+import           System.Directory    (doesFileExist)
 import           Text.Read
 
 import           Shared.Types
 import           Tracker.Types
 
-getCurrentTimestamp :: MonadIO m => m Timestamp
-getCurrentTimestamp = Timestamp <$> liftIO getZonedTime
+data StateException
+  = ParseException String
+  | InvalidState String
+  deriving (Show, Typeable)
 
-lastEvent :: LocalState -> Maybe Event
-lastEvent (LocalState events) = lastMay events
-
-duration :: Timestamp -> Timestamp -> TimeDelta
-duration (Timestamp start) (Timestamp end) =
-  let delta = diffUTCTime (zonedTimeToUTC end) (zonedTimeToUTC start)
-  in TimeDelta $ truncate (realToFrac delta :: Double)
+instance Exception StateException
 
 data Event
   = Started Timestamp IssueKey
@@ -38,15 +34,19 @@ eventTimestamp :: Event -> Timestamp
 eventTimestamp (Started ts _) = ts
 eventTimestamp (Stopped ts)   = ts
 
+lastEvent :: LocalState -> Maybe Event
+lastEvent (LocalState events) = lastMay events
+
 -- |Loads state from file at location `path`. Returns empty local state if file
 -- does not exist. Might fail due to parse errors.
-loadState :: FilePath -> ExceptT Failure IO LocalState
+loadState :: (MonadIO m, MonadThrow m)
+          => FilePath -> m LocalState
 loadState path = do
   exists <- liftIO $ doesFileExist path
   if exists
     then do raw <- liftIO $ readFile path
             case readMaybe `traverse` filter (not . blank) (lines raw) of
-              Nothing     -> throwError $ "Unable to parse " ++ path
+              Nothing     -> throwM $ ParseException $ "Unable to parse " ++ path
               Just events -> return $ LocalState events
     else return $ LocalState []
 
@@ -89,27 +89,26 @@ takeAllLogItems state =
       in (state'', item:items)
 
 -- |Appends an event to the end of the event log in the state.
-tryAppendEvent :: (MonadState LocalState m, MonadError Failure m) => Event -> m ()
-tryAppendEvent event = do
-  last <- gets lastEvent
-  event' <- checkEvent last event
+appendEvent :: (MonadState LocalState m, MonadThrow m)
+               => Event -> m ()
+appendEvent event = do
+  gets lastEvent >>= flip checkEvent event
   modify $ append event
-  --LocalState (events ++ [event])
   where
-    append event (LocalState events) = LocalState $ events ++ [event]
+    append new (LocalState events) = LocalState $ events ++ [new]
 
     checkEvent Nothing (Stopped _)
-      = throwError "No active task"
-    checkEvent Nothing new@(Started _ _)
-      = return new
+      = throwM $ InvalidState "No active task"
+    checkEvent Nothing (Started _ _)
+      = return ()
     checkEvent (Just (Stopped _)) (Stopped _)
-      = throwError "No active task"
-    checkEvent (Just (Stopped ts1)) new@(Started ts2 _)
-      | ts1 <= ts2 = return new
-      | otherwise = throwError "Timestamps need to be non-decreasing"
-    checkEvent (Just (Started ts1 _)) new@(Stopped ts2)
-      | ts1 <= ts2 = return new
-      | otherwise = throwError "Timestamps need to be non-decreasing"
-    checkEvent (Just (Started ts1 _)) new@(Started ts2 _)
-      | ts1 <= ts2 = return new
-      | otherwise = throwError "Timestamps need to be non-decreasing"
+      = throwM $ InvalidState "No active task"
+    checkEvent (Just (Stopped ts1)) (Started ts2 _)
+      | ts1 <= ts2 = return ()
+      | otherwise = throwM $ InvalidState "Timestamps need to be non-decreasing"
+    checkEvent (Just (Started ts1 _)) (Stopped ts2)
+      | ts1 <= ts2 = return ()
+      | otherwise = throwM $ InvalidState "Timestamps need to be non-decreasing"
+    checkEvent (Just (Started ts1 _)) (Started ts2 _)
+      | ts1 <= ts2 = return ()
+      | otherwise = throwM $ InvalidState "Timestamps need to be non-decreasing"

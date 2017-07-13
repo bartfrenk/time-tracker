@@ -51,8 +51,8 @@ runClientT = runReaderT
 runClient :: ReaderT ClientEnv IO a -> ClientEnv -> IO a
 runClient = runReaderT
 
-type ClientMonad m =
-  (MonadThrow m, MonadReader ClientEnv m, MonadIO m)
+type MonadClient m =
+  (MonadIO m, MonadReader ClientEnv m, MonadThrow m)
 
 setMethod :: Method -> Request -> Request
 setMethod method request = request { method = methodToByteString method }
@@ -75,7 +75,7 @@ mkRequestWithParse parse method path = do
   return $ setMethod method
          $ applyBasicAuth user password request
 
-http :: ClientMonad m => Request -> m (Response Lazy.ByteString)
+http :: MonadClient m => Request -> m (Response Lazy.ByteString)
 http request = reader manager >>= liftIO . httpLbs request
 
 replace :: Char -> Char -> ByteString -> ByteString

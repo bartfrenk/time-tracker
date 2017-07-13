@@ -5,7 +5,9 @@
 module Backend
   ( Handle(..)
   , Page(..)
+  , MonadBackend(..)
   ) where
+
 
 import           BasicPrelude
 
@@ -20,3 +22,8 @@ data Handle m = Handle
   { book   :: LogItem -> m ()
   , search :: JQL -> Page -> m [Issue]
   }
+
+
+class Monad m => MonadBackend m where
+  book :: LogItem -> m ()
+  search :: JQL -> Page -> m [Issue]
