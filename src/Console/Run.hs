@@ -6,7 +6,7 @@ import           Data.Version        (showVersion)
 
 import           Paths_time_tracker        (version)
 
-import           Tracker.Handlers
+import           Tracker
 
 
 printVersion :: MonadIO m => m ()

@@ -22,7 +22,7 @@ library
                        Shared.Client
                        Shared.Types
                        Shared.Utils
-                       Tracker.Handlers
+                       Tracker
                        Tracker.State
                        Tracker.Types
                        Paths_time_tracker

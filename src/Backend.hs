@@ -5,7 +5,6 @@
 module Backend
   ( Handle(..)
   , Page(..)
-  , MonadBackend(..)
   ) where
 
 
@@ -18,12 +17,7 @@ data Page = Page
   , limit  :: Int
   }
 
-data Handle m = Handle
-  { book   :: LogItem -> m ()
-  , search :: JQL -> Page -> m [Issue]
+data Handle = Handle
+  { book   :: LogItem -> IO ()
+  , search :: JQL -> Page -> IO [Issue]
   }
-
-
-class Monad m => MonadBackend m where
-  book :: LogItem -> m ()
-  search :: JQL -> Page -> m [Issue]

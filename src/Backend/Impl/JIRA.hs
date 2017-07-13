@@ -14,9 +14,8 @@
 
 module Backend.Impl.JIRA
   ( module Backend.Impl.JIRA
-  , ClientEnv
-  , runClientT
-  ) where
+  , Config(..))
+  where
 
 import           BasicPrelude
 import           Control.Lens
@@ -30,8 +29,19 @@ import           Data.String.Conv
 import           Network.HTTP.Client
 
 import           Backend
-import           Shared.Client
+import           Shared.Client as Client
 import           Tracker.Types
+
+withHandle :: Client.Config -> (Backend.Handle -> IO a) -> IO a
+withHandle config cont = liftIO (newHandle config) >>= cont
+
+newHandle :: Client.Config -> IO Backend.Handle
+newHandle config = do
+  env <- mkDefaultClientEnv config
+  return Backend.Handle
+    { book = \item -> runClientT (bookM item) env
+    , search = \jql page -> runClientT (searchM jql page) env
+    }
 
 searchM :: MonadClient m => JQL -> Page -> m [Issue]
 searchM jql page =
