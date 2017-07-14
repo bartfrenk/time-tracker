@@ -20,4 +20,5 @@ data Page = Page
 data Handle = Handle
   { book   :: LogItem -> IO ()
   , search :: JQL -> Page -> IO [Issue]
+  , fetch  :: IssueKey -> IO (Maybe Issue)
   }

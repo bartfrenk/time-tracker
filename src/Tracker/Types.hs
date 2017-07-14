@@ -1,24 +1,27 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-module Tracker.Types (IssueKey,
-                       Issue(..),
-                       LogItem(..),
-                       Timestamp(..),
-                       formatTimestamp,
-                       JQL(..),
-                       Failure,
-                       toSeconds,
-                       mkIssueKey) where
+module Tracker.Types
+  ( IssueKey
+  , toText
+  , Issue(..)
+  , LogItem(..)
+  , Timestamp(..)
+  , formatTimestamp
+  , JQL(..)
+  , Failure
+  , toSeconds
+  , mkIssueKey
+  ) where
 
 import           Data.Aeson
-import qualified Data.Text           as T
+import qualified Data.Text    as T
 import           GHC.Generics
 
 import           Shared.Types
 
 type Failure = String
 
-newtype IssueKey = IssueKey T.Text deriving (Eq)
+newtype IssueKey = IssueKey { toText :: T.Text } deriving (Eq)
 
 newtype JQL = JQL T.Text deriving (Eq, Show)
 
