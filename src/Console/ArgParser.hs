@@ -13,7 +13,7 @@ import           Data.Text           hiding (index, words)
 import           Data.Time.LocalTime
 import           Options.Applicative
 
-import           Config
+import           Console.Config
 import           Shared.Types
 import           Tracker.State
 import           Tracker.Types

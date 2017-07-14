@@ -1,6 +1,6 @@
-{-# LANGUAGE UndecidableInstances  #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -16,8 +16,11 @@ module Shared.Client
 import           BasicPrelude
 import           Control.Monad.Catch
 import           Control.Monad.Reader
+import           Data.Aeson
 import qualified Data.ByteString.Char8  as C8
 import qualified Data.ByteString.Lazy   as Lazy
+import           Data.String.Conv       (toS)
+import           GHC.Generics
 import           Network.HTTP.Client
 import           Network.HTTP.Types.URI
 
@@ -28,9 +31,12 @@ mkDefaultClientEnv config =
 
 data Config = Config
   { baseURL  :: String,
-    user     :: ByteString,
-    password :: ByteString
-  }
+    user     :: Text,
+    password :: Text
+  } deriving (Generic, Show)
+
+instance FromJSON Config
+instance ToJSON Config
 
 data ClientEnv = ClientEnv
   { config  :: Config
@@ -70,8 +76,8 @@ mkRequestWithParse :: (MonadThrow m, MonadReader ClientEnv m)
 mkRequestWithParse parse method path = do
   baseURL <- reader (baseURL . config)
   request <- parse (baseURL ++ path)
-  user <- reader (user . config)
-  password <- reader (password . config)
+  user <- reader (toS . user . config)
+  password <- reader (toS . password . config)
   return $ setMethod method
          $ applyBasicAuth user password request
 

@@ -12,7 +12,6 @@ import qualified Data.Yaml            as YAML
 import           Options.Applicative  hiding (execParser, runParser)
 import           Prelude              hiding (readFile)
 
-import           Backend
 import           Tracker.Types
 
 

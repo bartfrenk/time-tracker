@@ -16,17 +16,18 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   other-modules:       Backend
-                       Backend.Impl.JIRA
-                       Console.ArgParser
+                       Console.Args
+                       Console.Config
                        Console.Run
                        Shared.Client
                        Shared.Types
                        Shared.Utils
-                       Tracker
                        Tracker.State
                        Tracker.Types
                        Paths_time_tracker
-  exposed-modules:     Config
+  exposed-modules:     Console
+                       Tracker
+                       Backend.Impl.JIRA
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , attoparsec
@@ -49,12 +50,21 @@ library
                      , yaml
   default-language:    Haskell2010
 
-executable time-tracker-exe
+executable track
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
+                     , aeson
+                     , basic-prelude
+                     , bytestring
+                     , exceptions
+                     , lens
+                     , lens-aeson
+                     , mtl
+                     , string-conv
                      , time-tracker
+                     , yaml
   default-language:    Haskell2010
 
 test-suite time-tracker-test
