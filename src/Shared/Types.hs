@@ -42,7 +42,7 @@ getTimestamp :: MonadIO m => m Timestamp
 getTimestamp = Timestamp <$> liftIO getZonedTime
 
 timestampFormatStr :: String
-timestampFormatStr = "%Y-%m-%d %H:%M %Z"
+timestampFormatStr = "%Y-%m-%d %H:%M %z"
 
 formatTimestamp :: TimeLocale -> String -> Timestamp -> String
 formatTimestamp locale formatStr (Timestamp zt) =

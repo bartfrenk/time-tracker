@@ -9,11 +9,18 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Conduit
 import           Data.Tuple              (swap)
+import           Data.Typeable
 
 import qualified Backend
 import           Tracker.State
 import           Tracker.Types
 
+
+data TrackerException
+  = IssueNotFound IssueKey
+  deriving (Show, Typeable)
+
+instance Exception TrackerException
 
 withHandle :: Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
 withHandle config backend cont = do
@@ -45,7 +52,7 @@ data Config = Config
 
 data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()
-  , start  :: IssueKey -> Timestamp -> IO ()
+  , start  :: IssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO ()
   }
 
@@ -66,10 +73,15 @@ searchConduit backend jql = loop 0
       unless (null issues) $
         loop (offset + length issues)
 
-
-startM :: (MonadReader Config m, MonadState LocalState m, MonadThrow m)
-       => Backend.Handle -> IssueKey -> Timestamp -> m ()
-startM = undefined
+startM :: (MonadReader Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
+       => Backend.Handle -> IssueKey -> Timestamp -> m Issue
+startM backend key time = do
+  issue' <- liftIO $ Backend.fetch backend key
+  case issue' of
+    Nothing -> throwM $ IssueNotFound key
+    Just issue -> do
+      appendEvent (Started time key)
+      return issue
 
 stopM :: (MonadState LocalState m, MonadThrow m)
       => Timestamp -> m ()

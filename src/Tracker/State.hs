@@ -109,6 +109,7 @@ appendEvent event = do
     checkEvent (Just (Started ts1 _)) (Stopped ts2)
       | ts1 <= ts2 = return ()
       | otherwise = throwM $ InvalidState "Timestamps need to be non-decreasing"
-    checkEvent (Just (Started ts1 _)) (Started ts2 _)
-      | ts1 <= ts2 = return ()
-      | otherwise = throwM $ InvalidState "Timestamps need to be non-decreasing"
+    checkEvent (Just (Started ts1 key1)) (Started ts2 key2)
+      | ts1 > ts2 = throwM $ InvalidState "Timestamps need to be non-decreasing"
+      | key1 == key2 = throwM $ InvalidState $ "Issue " ++ show key1 ++ " is already active"
+      | otherwise = return ()
