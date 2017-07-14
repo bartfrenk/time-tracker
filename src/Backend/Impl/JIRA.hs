@@ -13,7 +13,9 @@
 {-# LANGUAGE TypeOperators         #-}
 
 module Backend.Impl.JIRA
-  ( module Backend.Impl.JIRA
+  ( Handle
+  , withHandle
+  , newHandle
   , Config(..))
   where
 
@@ -23,7 +25,6 @@ import           Control.Monad             (unless, (>=>))
 import           Control.Monad.Catch
 import           Data.Aeson
 import           Data.Aeson.Lens
-import           Data.Aeson.Types          (Parser, parseEither)
 import qualified Data.ByteString.Char8     as C8
 import qualified Data.ByteString.Lazy      as Lazy
 import           Data.String.Conv
@@ -32,6 +33,7 @@ import           Network.HTTP.Types.Status (notFound404, ok200)
 
 import           Backend
 import           Shared.Client             as Client
+import           Shared.Utils              (decodeThrow, parseThrow)
 import           Tracker.Types
 
 withHandle :: Client.Config -> (Backend.Handle -> IO a) -> IO a
@@ -99,15 +101,3 @@ mkFetchRequest key = do
 
 bookM :: MonadClient m => LogItem -> m ()
 bookM = undefined
-
-parseThrow :: MonadThrow m => (a -> Parser b) -> a -> m b
-parseThrow p v = case parseEither p v of
-  Left _  -> undefined -- TODO
-  Right b -> return b
-
-decodeThrow :: (MonadThrow m, FromJSON a) => Lazy.ByteString -> m a
-decodeThrow bs = case eitherDecode bs of
-  Left _ -> undefined -- TODO
-  Right a -> return a
-
-
