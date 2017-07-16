@@ -1,9 +1,11 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module Console.Args where
 
-import Control.Monad.Trans (MonadIO)
+import           BasicPrelude
+import           Control.Monad.Trans (MonadIO)
 
-import Console.Config
-import Tracker.Types
+import           Console.Config
+import           Tracker.Types
 
 data Command
   = Search JQL
@@ -14,5 +16,5 @@ data Command
   | Version
   deriving (Eq, Show)
 
-runParser :: MonadIO m => Config -> [String] -> m Command
+runParser :: MonadIO m => Config -> [Text] -> m Command
 runParser config args = return Version

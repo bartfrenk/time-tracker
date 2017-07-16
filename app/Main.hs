@@ -5,14 +5,15 @@ module Main where
 import           BasicPrelude
 import           Control.Lens
 import           Control.Monad.Catch
-import           Control.Monad.Trans (MonadIO)
+import           Control.Monad.Managed
+import           Control.Monad.Trans   (MonadIO)
 import           Data.Aeson
 import           Data.Aeson.Lens
-import           Data.ByteString     as BS
+import           Data.ByteString       as BS
 import           Data.String.Conv
-import           Data.Yaml           as YAML
+import           Data.Yaml             as YAML
 
-import qualified Backend.Impl.JIRA   as JIRA
+import qualified Backend.Impl.JIRA     as JIRA
 import qualified Console
 import qualified Tracker
 
@@ -41,5 +42,13 @@ fromConfig config sub = case config ^? key sub of
 main :: IO ()
 main = do
   config <- loadConfig "config.yaml"
-  backend <- JIRA.newHandle =<< fromConfig config "backend"
+  backendC <- fromConfig config "backend"
+  trackerC <- fromConfig config "tracker"
+  consoleC <- fromConfig config "console"
+
+  runManaged $ do
+    backendH <- managed $ JIRA.withHandle backendC
+    trackerH <- managed $ Tracker.withHandle trackerC backendH
+    consoleH <- managed $ Console.withHandle consoleC trackerH
+    liftIO (Console.run consoleH =<< getArgs)
   return ()

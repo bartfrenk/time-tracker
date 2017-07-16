@@ -61,6 +61,7 @@ executable track
                      , exceptions
                      , lens
                      , lens-aeson
+                     , managed
                      , mtl
                      , string-conv
                      , time-tracker

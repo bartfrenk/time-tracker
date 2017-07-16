@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Tracker where
@@ -7,9 +8,11 @@ import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Data.Aeson
 import           Data.Conduit
 import           Data.Tuple              (swap)
 import           Data.Typeable
+import           GHC.Generics
 
 import qualified Backend
 import           Tracker.State
@@ -51,7 +54,9 @@ modifyState stateVar act =
 data Config = Config
   {
     statePath :: FilePath
-  }
+  } deriving Generic
+
+instance FromJSON Config
 
 data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()

@@ -1,18 +1,24 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
 module Console where
 
+import           BasicPrelude
 import           Control.Monad.Reader
+
 
 import           Console.Args
 import           Console.Config
 import           Console.Run
 import           Shared.Utils         (expand)
-import           Tracker (Handle)
+import           Tracker              (Handle)
 
 data Handle = Handle
-  { run :: [String] -> IO ()
+  { run :: [Text] -> IO ()
   }
+
+withHandle :: Config -> Tracker.Handle -> (Console.Handle -> IO a) -> IO a
+withHandle config tracker cont = cont (newHandle config tracker)
 
 newHandle :: Config -> Tracker.Handle -> Console.Handle
 newHandle config tracker = Console.Handle
@@ -20,7 +26,7 @@ newHandle config tracker = Console.Handle
   }
 
 runM :: (MonadIO m, MonadReader Config m)
-     => Tracker.Handle -> [String] -> m ()
+     => Tracker.Handle -> [Text] -> m ()
 runM tracker args = do
   config <- ask
   command <- runParser config (expand (aliases config) args)
