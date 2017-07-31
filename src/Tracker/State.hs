@@ -28,7 +28,7 @@ data Event
   = Started Timestamp IssueKey
   | Stopped Timestamp deriving (Eq, Show, Read)
 
-newtype LocalState = LocalState [Event] deriving (Show)
+newtype LocalState = LocalState [Event] deriving (Eq, Show)
 
 eventTimestamp :: Event -> Timestamp
 eventTimestamp (Started ts _) = ts

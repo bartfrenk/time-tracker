@@ -43,8 +43,8 @@ withHandle config backend cont = do
             in evalState act <$> readMVar stateVar
         }
   result <- cont h
-  final <- readMVar stateVar
-  saveState (statePath config) final
+  finalState <- readMVar stateVar
+  unless (finalState == initState) $ saveState (statePath config) finalState
   return result
 
 modifyState :: MVar s -> StateT s IO a -> IO a

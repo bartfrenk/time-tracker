@@ -21,13 +21,13 @@ library
                        Console.Run
                        Shared.Client
                        Shared.Types
-                       Shared.Utils
                        Tracker.State
                        Tracker.Types
                        Paths_time_tracker
   exposed-modules:     Console
                        Tracker
                        Backend.Impl.JIRA
+                       Shared.Utils
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , attoparsec
