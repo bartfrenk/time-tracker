@@ -37,7 +37,9 @@ parseCommand config now = hsubparser $
   command "start" (parseStart config now `withInfo` "Start work on an issue")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
-parseStart = undefined
+parseStart config now = Start
+  <$> argument auto (metavar "ISSUE")
+  <*> pure now
 
 
 
