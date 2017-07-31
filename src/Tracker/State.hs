@@ -88,6 +88,16 @@ takeAllLogItems state =
       let (state'', items) = takeAllLogItems state'
       in (state'', item:items)
 
+readActiveLogItem :: MonadState LocalState m
+                  => Timestamp -> m (Maybe LogItem)
+readActiveLogItem ts =
+  gets lastEvent >>= mkLogItemUntil ts
+  where mkLogItemUntil ts2 event' =
+          case event' of
+            Just (Started ts1 key) ->
+              return $ Just $ LogItem key ts (duration ts1 ts2)
+            _ -> return Nothing
+
 readLastLogItem :: MonadState LocalState m
                 => m (Maybe LogItem)
 readLastLogItem = gets (lastMay . snd . takeAllLogItems)

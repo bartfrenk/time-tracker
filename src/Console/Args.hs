@@ -35,7 +35,8 @@ withInfo p desc = p `info` progDesc desc
 parseCommand :: Console.Config -> Timestamp -> Parser Command
 parseCommand config now = hsubparser $
   command "start" (parseStart config now `withInfo` "Start work on an issue") <>
-  command "stop" (parseStop config now `withInfo` "Stop work on active issue")
+  command "stop" (parseStop config now `withInfo` "Stop work on active issue") <>
+  command "review" (parseReview `withInfo` "Review logged work")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart config now = Start
@@ -45,6 +46,9 @@ parseStart config now = Start
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop config now = Stop
   <$> pure now
+
+parseReview :: Parser Command
+parseReview = pure Review
 
 
 

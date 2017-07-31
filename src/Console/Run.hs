@@ -25,3 +25,8 @@ stopIssue tracker ts = liftIO $ do
   case item' of
     Just item -> print item
     Nothing -> return ()
+
+review :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
+review tracker ts = liftIO $ do
+  info <- Tracker.review tracker ts
+  print info

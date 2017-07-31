@@ -38,8 +38,8 @@ withHandle config backend cont = do
             in modifyState stateVar act
         , search = \jql sink ->
             runReaderT (searchM backend jql sink) config
-        , review =
-            let act = runReaderT reviewM config
+        , review = \time ->
+            let act = runReaderT (reviewM time) config
             in evalState act <$> readMVar stateVar
         }
   result <- cont h
@@ -62,7 +62,7 @@ data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()
   , start  :: IssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
-  , review :: IO [LogItem]
+  , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
   }
 
 -- |Search JIRA for issues matching the JQL query.
@@ -99,5 +99,8 @@ stopM ts = do
   readLastLogItem
 
 reviewM :: (MonadState LocalState m, MonadReader Config m)
-        => m [LogItem]
-reviewM = gets (snd . takeAllLogItems)
+        => Timestamp -> m ([LogItem], Maybe LogItem)
+reviewM ts = do
+  logItems <- gets (snd . takeAllLogItems)
+  activeLogItem <- readActiveLogItem ts
+  return (logItems, activeLogItem)

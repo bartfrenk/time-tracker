@@ -10,6 +10,7 @@ import           Control.Monad.Reader
 import           Console.Args
 import           Console.Config
 import           Console.Run
+import           Shared.Types
 import           Shared.Utils         (expand)
 import qualified Tracker
 
@@ -37,3 +38,4 @@ process :: MonadIO m
 process _ Version              = printVersion
 process tracker (Start key ts) = startIssue tracker key ts
 process tracker (Stop ts)      = stopIssue tracker ts
+process tracker Review         = review tracker =<< getTimestamp
