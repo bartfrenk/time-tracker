@@ -19,8 +19,9 @@ startIssue tracker key ts = liftIO $ do
   issue <- Tracker.start tracker key ts
   print issue
 
-
-
-
-
-
+stopIssue :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
+stopIssue tracker ts = liftIO $ do
+  item' <- Tracker.stop tracker ts
+  case item' of
+    Just item -> print item
+    Nothing -> return ()

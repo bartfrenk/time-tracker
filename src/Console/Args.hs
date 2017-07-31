@@ -34,12 +34,17 @@ withInfo p desc = p `info` progDesc desc
 
 parseCommand :: Console.Config -> Timestamp -> Parser Command
 parseCommand config now = hsubparser $
-  command "start" (parseStart config now `withInfo` "Start work on an issue")
+  command "start" (parseStart config now `withInfo` "Start work on an issue") <>
+  command "stop" (parseStop config now `withInfo` "Stop work on active issue")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart config now = Start
   <$> argument auto (metavar "ISSUE")
   <*> pure now
+
+parseStop :: Console.Config -> Timestamp -> Parser Command
+parseStop config now = Stop
+  <$> pure now
 
 
 

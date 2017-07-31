@@ -61,7 +61,7 @@ instance FromJSON Config
 data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()
   , start  :: IssueKey -> Timestamp -> IO Issue
-  , stop   :: Timestamp -> IO ()
+  , stop   :: Timestamp -> IO (Maybe LogItem)
   , review :: IO [LogItem]
   }
 
@@ -93,8 +93,10 @@ startM backend key time = do
       return issue
 
 stopM :: (MonadState LocalState m, MonadThrow m)
-      => Timestamp -> m ()
-stopM ts = appendEvent (Stopped ts)
+      => Timestamp -> m (Maybe LogItem)
+stopM ts = do
+  appendEvent (Stopped ts)
+  readLastLogItem
 
 reviewM :: (MonadState LocalState m, MonadReader Config m)
         => m [LogItem]

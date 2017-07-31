@@ -88,6 +88,10 @@ takeAllLogItems state =
       let (state'', items) = takeAllLogItems state'
       in (state'', item:items)
 
+readLastLogItem :: MonadState LocalState m
+                => m (Maybe LogItem)
+readLastLogItem = gets (lastMay . snd . takeAllLogItems)
+
 -- |Appends an event to the end of the event log in the state.
 appendEvent :: (MonadState LocalState m, MonadThrow m)
                => Event -> m ()

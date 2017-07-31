@@ -11,7 +11,7 @@ import           Console.Args
 import           Console.Config
 import           Console.Run
 import           Shared.Utils         (expand)
-import qualified Tracker              as Tracker
+import qualified Tracker
 
 data Handle = Handle
   { run :: [Text] -> IO ()
@@ -36,3 +36,4 @@ process :: MonadIO m
         => Tracker.Handle -> Command -> m ()
 process _ Version              = printVersion
 process tracker (Start key ts) = startIssue tracker key ts
+process tracker (Stop ts)      = stopIssue tracker ts
