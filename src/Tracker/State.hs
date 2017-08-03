@@ -95,7 +95,7 @@ readActiveLogItem ts =
   where mkLogItemUntil ts2 event' =
           case event' of
             Just (Started ts1 key) ->
-              return $ Just $ LogItem key ts (duration ts1 ts2)
+              return $ Just $ LogItem key ts1 (duration ts1 ts2)
             _ -> return Nothing
 
 readLastLogItem :: MonadState LocalState m

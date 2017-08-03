@@ -1,18 +1,25 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Console.Run where
 
-import           Control.Monad.Trans (liftIO, MonadIO)
+import           BasicPrelude
+import           Control.Monad.Trans (MonadIO, liftIO)
+import qualified Data.Text           as T
 import           Data.Version        (showVersion)
 
-import           Paths_time_tracker        (version)
+import           Paths_time_tracker  (version)
 
+import           Console.Format
+import           Shared.Types
 import           Tracker
-import Tracker.Types
+import           Tracker.Types
 
 
 printVersion :: MonadIO m => m ()
 printVersion =
-  liftIO $ putStrLn (showVersion version)
+  liftIO $ putStrLn (T.pack $ showVersion version)
 
 startIssue :: MonadIO m => Tracker.Handle -> IssueKey -> Timestamp -> m ()
 startIssue tracker key ts = liftIO $ do
@@ -24,9 +31,7 @@ stopIssue tracker ts = liftIO $ do
   item' <- Tracker.stop tracker ts
   case item' of
     Just item -> print item
-    Nothing -> return ()
+    Nothing   -> return ()
 
 review :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
-review tracker ts = liftIO $ do
-  info <- Tracker.review tracker ts
-  print info
+review tracker ts = liftIO $ Tracker.review tracker ts >>= printReview

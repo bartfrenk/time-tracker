@@ -19,6 +19,7 @@ library
                        Console.Args
                        Console.Config
                        Console.Run
+                       Console.Format
                        Shared.Client
                        Shared.Types
                        Tracker.State
@@ -28,9 +29,10 @@ library
                        Tracker
                        Backend.Impl.JIRA
                        Shared.Utils
-  build-depends:       base >= 4.7 && < 5
-                     , aeson
+  build-depends:       aeson
+                     , ansi-wl-pprint
                      , attoparsec
+                     , base >= 4.7 && < 5
                      , basic-prelude
                      , bytestring
                      , conduit
