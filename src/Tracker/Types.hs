@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
@@ -8,6 +10,7 @@ module Tracker.Types
   , PartialIssueKey
   , TrackerException(..)
   , toText
+
   , Issue(..)
   , LogItem(..)
   , Timestamp(..)
@@ -19,11 +22,13 @@ module Tracker.Types
   , Config(..)
   ) where
 
-import           BasicPrelude        hiding ((<|>))
+import           BasicPrelude         hiding (lookup, (<|>))
 import           Control.Monad.Catch
+import           Control.Monad.Reader
 import           Data.Aeson
-import           Data.Char           (isAlpha)
-import qualified Data.Text           as T
+import           Data.Char            (isAlpha)
+import           Data.Map.Strict      (lookup)
+import qualified Data.Text            as T
 import           GHC.Generics
 import           Text.Parsec
 
@@ -50,10 +55,21 @@ instance Read PartialIssueKey where
 instance Show PartialIssueKey where
   show (PartialIssueKey t) = T.unpack t
 
-completeToIssueKey :: MonadThrow m => Text -> PartialIssueKey -> m IssueKey
-completeToIssueKey defaultProject (PartialIssueKey partial) =
-  case parse (issueKeyParser defaultProject) "" (T.unpack partial) of
-    Left err -> throwM $ InvalidIssueKey partial
+expandIssueAliases :: MonadReader Config m => Text -> m (Maybe IssueKey)
+expandIssueAliases t = lookup t <$> reader issues
+
+completeToIssueKey :: (MonadThrow m, MonadReader Config m) => PartialIssueKey -> m IssueKey
+completeToIssueKey (PartialIssueKey t) = do
+  issueKey' <- expandIssueAliases t
+  case issueKey' of
+    Nothing -> parseIssueKey t
+    Just key -> return key
+
+parseIssueKey :: (MonadThrow m, MonadReader Config m) => Text -> m IssueKey
+parseIssueKey t = do
+  project <- reader defaultProject
+  case parse (issueKeyParser project) "" (T.unpack t) of
+    Left _  -> throwM $ InvalidIssueKey t
     Right res -> return res
 
 issueKeyParser :: Text -> Parsec String u IssueKey
@@ -98,7 +114,8 @@ data LogItem = LogItem
 data Config = Config
   { statePath      :: FilePath
   , defaultProject :: Text
-  } deriving Generic
+  , issues         :: Map Text IssueKey
+  } deriving (Show, Generic)
 
 instance FromJSON Config
 

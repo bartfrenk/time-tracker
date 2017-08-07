@@ -1,19 +1,16 @@
 {-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
-module Tracker where
+module Tracker (module Tracker) where
 
 import           BasicPrelude
 import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.Aeson
 import           Data.Conduit
 import           Data.Tuple              (swap)
-import           GHC.Generics
 
 import qualified Backend
 import           Tracker.State
@@ -73,8 +70,7 @@ searchConduit backend jql = loop 0
 startM :: (MonadReader Tracker.Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
        => Backend.Handle -> PartialIssueKey -> Timestamp -> m Issue
 startM backend partialKey time = do
-  defaultProject <- reader defaultProject
-  key <- completeToIssueKey defaultProject partialKey
+  key <- completeToIssueKey partialKey
   issue' <- liftIO $ Backend.fetch backend key
   case issue' of
     Nothing -> throwM $ IssueNotFound key
