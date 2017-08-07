@@ -7,7 +7,7 @@ import qualified Data.Text           as T
 import           Options.Applicative
 
 import           Console.Config      as Console
-import           Shared.Types        (getTimestamp)
+import           Shared.Types
 import           Tracker.Types
 
 data Command
@@ -41,11 +41,17 @@ parseCommand config now = hsubparser $
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart config now = Start
   <$> argument auto (metavar "ISSUE")
-  <*> pure now
+  <*> timestampOption now
+
+-- |Optional time offset argument applied to `now`, defaults to 0.
+timestampOption :: Timestamp -> Parser Timestamp
+timestampOption now = addTimeDelta now <$> timeDeltaParser
+  where timeDeltaParser :: Parser TimeDelta
+        timeDeltaParser = option auto $ short 't' <> metavar "time" <> value mempty
 
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop config now = Stop
-  <$> pure now
+  <$> timestampOption now
 
 parseReview :: Parser Command
 parseReview = pure Review

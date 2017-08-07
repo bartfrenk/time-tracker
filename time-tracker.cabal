@@ -45,6 +45,7 @@ library
                      , lens-aeson
                      , mtl
                      , optparse-applicative
+                     , parsec
                      , safe
                      , string-conv
                      , text

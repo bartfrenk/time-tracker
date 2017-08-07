@@ -49,7 +49,7 @@ formatHistory formatFn items =
 
 formatDay :: ([Text] -> P.Doc) -> (Day, [LogItem]) -> P.Doc
 formatDay formatFn (day, items) =
-  let t = logItemToText <$> items
+  let t = logItemToText <$> reverse items
       total = mconcat $ timeSpent <$> items
   in
     txt (tshow day) <> " (" <> txt (toDurationString total) <> ")" </$$>

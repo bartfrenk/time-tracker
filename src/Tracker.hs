@@ -19,12 +19,6 @@ import           Tracker.State
 import           Tracker.Types
 
 
-data TrackerException
-  = IssueNotFound IssueKey
-  deriving (Show, Typeable)
-
-instance Exception TrackerException
-
 withHandle :: Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
 withHandle config backend cont = do
   initState <- loadState $ statePath config
