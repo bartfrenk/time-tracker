@@ -13,7 +13,6 @@ module Tracker.Types
   , Timestamp(..)
   , formatTimestamp
   , JQL(..)
-  , Failure
   , toSeconds
   , mkIssueKey
   , completeToIssueKey
@@ -29,8 +28,6 @@ import           GHC.Generics
 import           Text.Parsec
 
 import           Shared.Types
-
-type Failure = String
 
 data TrackerException
   = IssueNotFound IssueKey
