@@ -16,7 +16,7 @@ module Backend.Impl.JIRA
   ( Handle
   , withHandle
   , newHandle
-  , Config(..))
+  , Client.Config(..))
   where
 
 import           BasicPrelude              hiding (try)

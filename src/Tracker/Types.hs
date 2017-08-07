@@ -17,6 +17,7 @@ module Tracker.Types
   , toSeconds
   , mkIssueKey
   , completeToIssueKey
+  , Config(..)
   ) where
 
 import           BasicPrelude        hiding ((<|>))
@@ -96,3 +97,11 @@ data LogItem = LogItem
   , started   :: Timestamp
   , timeSpent :: TimeDelta
   } deriving (Eq, Show)
+
+data Config = Config
+  { statePath      :: FilePath
+  , defaultProject :: Text
+  } deriving Generic
+
+instance FromJSON Config
+

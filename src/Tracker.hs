@@ -17,10 +17,10 @@ import           GHC.Generics
 
 import qualified Backend
 import           Tracker.State
-import           Tracker.Types
+import           Tracker.Types as Tracker
 
 
-withHandle :: Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
+withHandle :: Tracker.Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
 withHandle config backend cont = do
   initState <- loadState $ statePath config
   stateVar <- newMVar initState
@@ -46,13 +46,6 @@ modifyState :: MVar s -> StateT s IO a -> IO a
 modifyState stateVar act =
   modifyMVar stateVar ((swap `fmap`) <$> runStateT act)
 
-data Config = Config
-  { statePath      :: FilePath
-  , defaultProject :: Text
-  } deriving Generic
-
-instance FromJSON Config
-
 data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
@@ -61,7 +54,7 @@ data Handle = Handle
   }
 
 -- |Search JIRA for issues matching the JQL query.
-searchM :: (MonadIO m, MonadReader Config m)
+searchM :: (MonadIO m, MonadReader Tracker.Config m)
         => Backend.Handle -> JQL -> Sink Issue IO () -> m ()
 searchM backend jql sink =
   liftIO $ runConduit (searchConduit backend jql $= sink)
@@ -77,7 +70,7 @@ searchConduit backend jql = loop 0
       unless (null issues) $
         loop (offset + length issues)
 
-startM :: (MonadReader Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
+startM :: (MonadReader Tracker.Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
        => Backend.Handle -> PartialIssueKey -> Timestamp -> m Issue
 startM backend partialKey time = do
   defaultProject <- reader defaultProject
@@ -95,7 +88,7 @@ stopM ts = do
   appendEvent (Stopped ts)
   readLastLogItem
 
-reviewM :: (MonadState LocalState m, MonadReader Config m)
+reviewM :: (MonadState LocalState m, MonadReader Tracker.Config m)
         => Timestamp -> m ([LogItem], Maybe LogItem)
 reviewM ts = do
   logItems <- gets (snd . takeAllLogItems)
