@@ -2,8 +2,10 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
 module Tracker where
 
+import           BasicPrelude
 import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
@@ -11,7 +13,6 @@ import           Control.Monad.State
 import           Data.Aeson
 import           Data.Conduit
 import           Data.Tuple              (swap)
-import           Data.Typeable
 import           GHC.Generics
 
 import qualified Backend
@@ -24,8 +25,8 @@ withHandle config backend cont = do
   initState <- loadState $ statePath config
   stateVar <- newMVar initState
   let h = Tracker.Handle
-        { start = \issue time ->
-            let act = runReaderT (startM backend issue time) config
+        { start = \partialKey time ->
+            let act = runReaderT (startM backend partialKey time) config
             in  modifyState stateVar act
         , stop = \time ->
             let act = runReaderT (stopM time) config
@@ -46,15 +47,15 @@ modifyState stateVar act =
   modifyMVar stateVar ((swap `fmap`) <$> runStateT act)
 
 data Config = Config
-  {
-    statePath :: FilePath
+  { statePath      :: FilePath
+  , defaultProject :: Text
   } deriving Generic
 
 instance FromJSON Config
 
 data Handle = Handle
   { search :: JQL -> Sink Issue IO () -> IO ()
-  , start  :: IssueKey -> Timestamp -> IO Issue
+  , start  :: PartialIssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
   , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
   }
@@ -77,8 +78,10 @@ searchConduit backend jql = loop 0
         loop (offset + length issues)
 
 startM :: (MonadReader Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
-       => Backend.Handle -> IssueKey -> Timestamp -> m Issue
-startM backend key time = do
+       => Backend.Handle -> PartialIssueKey -> Timestamp -> m Issue
+startM backend partialKey time = do
+  defaultProject <- reader defaultProject
+  key <- completeToIssueKey defaultProject partialKey
   issue' <- liftIO $ Backend.fetch backend key
   case issue' of
     Nothing -> throwM $ IssueNotFound key

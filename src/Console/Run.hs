@@ -21,9 +21,9 @@ printVersion :: MonadIO m => m ()
 printVersion =
   liftIO $ putStrLn (T.pack $ showVersion version)
 
-startIssue :: MonadIO m => Tracker.Handle -> IssueKey -> Timestamp -> m ()
-startIssue tracker key ts = liftIO $ do
-  issue <- Tracker.start tracker key ts
+startIssue :: MonadIO m => Tracker.Handle -> PartialIssueKey -> Timestamp -> m ()
+startIssue tracker partialKey ts = liftIO $ do
+  issue <- Tracker.start tracker partialKey ts
   print issue
 
 stopIssue :: MonadIO m => Tracker.Handle -> Timestamp -> m ()

@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Tracker.Types
   ( IssueKey
+  , PartialIssueKey
+  , TrackerException(..)
   , toText
   , Issue(..)
   , LogItem(..)
@@ -18,10 +19,11 @@ module Tracker.Types
   , completeToIssueKey
   ) where
 
-import           BasicPrelude hiding ((<|>))
+import           BasicPrelude        hiding ((<|>))
+import           Control.Monad.Catch
 import           Data.Aeson
-import           Data.Char    (isAlpha)
-import qualified Data.Text    as T
+import           Data.Char           (isAlpha)
+import qualified Data.Text           as T
 import           GHC.Generics
 import           Text.Parsec
 
@@ -31,6 +33,7 @@ type Failure = String
 
 data TrackerException
   = IssueNotFound IssueKey
+  | InvalidIssueKey Text
   deriving (Show, Typeable)
 
 instance Exception TrackerException
@@ -41,9 +44,19 @@ newtype JQL = JQL T.Text deriving (Eq, Show)
 
 newtype PartialIssueKey = PartialIssueKey Text
 
-completeToIssueKey :: Text -> PartialIssueKey -> Either ParseError IssueKey
+instance Read PartialIssueKey where
+  readsPrec _ s =
+    let (word, rest) = span (/= ' ') (dropWhile (== ' ') s)
+    in [(PartialIssueKey $ T.pack word, rest)]
+
+instance Show PartialIssueKey where
+  show (PartialIssueKey t) = T.unpack t
+
+completeToIssueKey :: MonadThrow m => Text -> PartialIssueKey -> m IssueKey
 completeToIssueKey defaultProject (PartialIssueKey partial) =
-  parse (issueKeyParser defaultProject) "" (T.unpack partial)
+  case parse (issueKeyParser defaultProject) "" (T.unpack partial) of
+    Left err -> throwM $ InvalidIssueKey partial
+    Right res -> return res
 
 issueKeyParser :: Text -> Parsec String u IssueKey
 issueKeyParser defaultPrefix = do

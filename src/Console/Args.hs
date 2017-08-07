@@ -12,12 +12,12 @@ import           Tracker.Types
 
 data Command
   = Search JQL
-  | Start IssueKey Timestamp
+  | Start PartialIssueKey Timestamp
   | Stop Timestamp
   | Review
   | Book
   | Version
-  deriving (Eq, Show)
+  deriving (Show)
 
 runParser :: MonadIO m => Console.Config -> [Text] -> m Command
 runParser config args = do
