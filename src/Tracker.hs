@@ -4,7 +4,7 @@
 {-# LANGUAGE NoImplicitPrelude     #-}
 module Tracker (module Tracker) where
 
-import           BasicPrelude
+import           BasicPrelude hiding (try)
 import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
@@ -14,7 +14,7 @@ import           Data.Tuple              (swap)
 
 import qualified Backend
 import           Tracker.State
-import           Tracker.Types as Tracker
+import           Tracker.Types           as Tracker
 
 
 withHandle :: Tracker.Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
@@ -33,6 +33,9 @@ withHandle config backend cont = do
         , review = \time ->
             let act = runReaderT (reviewM time) config
             in evalState act <$> readMVar stateVar
+        , book =
+            let act = runReaderT (bookM backend []) config
+            in modifyState stateVar act
         }
   result <- cont h
   finalState <- readMVar stateVar
@@ -48,6 +51,7 @@ data Handle = Handle
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
   , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
+  , book   :: IO ([LogItem], Maybe SomeException)
   }
 
 -- |Search JIRA for issues matching the JQL query.
@@ -62,10 +66,10 @@ searchConduit backend jql = loop 0
     fetch = Backend.search backend jql
     limit = 2
     loop offset = do
-      issues <- lift $ fetch (Backend.Page offset limit)
-      mapM_ yield issues
-      unless (null issues) $
-        loop (offset + length issues)
+      fetchedIssues <- lift $ fetch (Backend.Page offset limit)
+      mapM_ yield fetchedIssues
+      unless (null fetchedIssues) $
+        loop (offset + length fetchedIssues)
 
 startM :: (MonadReader Tracker.Config m, MonadState LocalState m, MonadThrow m, MonadIO m)
        => Backend.Handle -> PartialIssueKey -> Timestamp -> m Issue
@@ -90,3 +94,19 @@ reviewM ts = do
   logItems <- gets (snd . takeAllLogItems)
   activeLogItem <- readActiveLogItem ts
   return (logItems, activeLogItem)
+
+bookM :: (MonadState LocalState m, MonadReader Tracker.Config m, MonadIO m, MonadCatch m)
+      => Backend.Handle -> [LogItem] -> m ([LogItem], Maybe SomeException)
+bookM backend booked = do
+  (rest, logItem') <- takeLogItem <$> get
+  case logItem' of
+    Just logItem -> do
+      result <- try (liftIO $ Backend.book backend logItem)
+      case result of
+        Left exc -> return (booked, Just exc)
+        Right _ -> do
+          put rest
+          bookM backend (logItem : booked)
+    Nothing -> do
+      put rest
+      return (booked, Nothing)

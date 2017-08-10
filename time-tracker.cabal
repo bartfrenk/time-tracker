@@ -50,6 +50,7 @@ library
                      , string-conv
                      , text
                      , time
+                     , unordered-containers
                      , yaml
   default-language:    Haskell2010
 

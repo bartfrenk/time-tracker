@@ -14,7 +14,6 @@ import           Paths_time_tracker  (version)
 import           Console.Format
 import           Shared.Types
 import           Tracker
-import           Tracker.Types
 
 
 printVersion :: MonadIO m => m ()
@@ -35,3 +34,6 @@ stopIssue tracker ts = liftIO $ do
 
 review :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
 review tracker ts = liftIO $ Tracker.review tracker ts >>= printReview
+
+book :: MonadIO m => Tracker.Handle -> m ()
+book tracker = liftIO $ Tracker.book tracker >>= print

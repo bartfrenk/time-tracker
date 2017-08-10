@@ -39,3 +39,4 @@ process _ Version                     = printVersion
 process tracker (Start partialKey ts) = startIssue tracker partialKey ts
 process tracker (Stop ts)             = stopIssue tracker ts
 process tracker Review                = review tracker =<< getTimestamp
+process tracker Book                  = book tracker

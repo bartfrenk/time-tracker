@@ -36,7 +36,8 @@ parseCommand :: Console.Config -> Timestamp -> Parser Command
 parseCommand config now = hsubparser $
   command "start" (parseStart config now `withInfo` "Start work on an issue") <>
   command "stop" (parseStop config now `withInfo` "Stop work on active issue") <>
-  command "review" (parseReview `withInfo` "Review logged work")
+  command "review" (parseReview `withInfo` "Review logged work") <>
+  command "book" (parseBook `withInfo` "Book logged work")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart config now = Start
@@ -52,6 +53,9 @@ timestampOption now = addTimeDelta now <$> timeDeltaParser
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop config now = Stop
   <$> timestampOption now
+
+parseBook :: Parser Command
+parseBook = pure Book
 
 parseReview :: Parser Command
 parseReview = pure Review

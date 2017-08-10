@@ -1,10 +1,10 @@
-{-# LANGUAGE FlexibleInstances     #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 
 {-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -27,7 +27,10 @@ import           Data.Aeson
 import           Data.Aeson.Lens
 import qualified Data.ByteString.Char8     as C8
 import qualified Data.ByteString.Lazy      as Lazy
+import           Data.HashMap.Lazy         as M
 import           Data.String.Conv
+import           Data.Time.Format          (defaultTimeLocale,
+                                            iso8601DateFormat)
 import           Network.HTTP.Client
 import           Network.HTTP.Types.Status (notFound404, ok200)
 
@@ -99,5 +102,19 @@ mkFetchRequest key = do
     , queryString = encodeQuery query
     }
 
-bookM :: MonadClient m => LogItem -> m ()
-bookM = undefined
+
+mkBookRequest :: (MonadReader ClientEnv m, MonadThrow m) => LogItem -> m Request
+mkBookRequest LogItem{..} = do
+  request <- mkRequestThrow POST $ "/rest/api/2/issue/" ++ show issueKey ++ "/worklog"
+  return request
+    { requestBody = RequestBodyLBS $ encode $ Object payload
+    , requestHeaders = ("content-type", "application/json"):requestHeaders request
+    }
+ where
+    payload = M.fromList [
+        ("started", toJSON $ formatTimestamp defaultTimeLocale formatStr started),
+        ("timeSpent", toJSON $ show timeSpent)]
+    formatStr = iso8601DateFormat (Just "%H:%M:%S.000%z")
+
+bookM :: (MonadClient m) => LogItem -> m ()
+bookM logItem = void (mkBookRequest logItem >>= http)
