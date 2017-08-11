@@ -1,5 +1,5 @@
 src/Scratch.hs
-state.log
+*.log
 config.yaml
 dist/
 TAGS
