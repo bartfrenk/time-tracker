@@ -39,6 +39,7 @@ library
                      , containers
                      , directory
                      , exceptions
+                     , filepath
                      , http-client
                      , http-types
                      , lens
@@ -62,6 +63,7 @@ executable track
                      , aeson
                      , basic-prelude
                      , bytestring
+                     , directory
                      , exceptions
                      , lens
                      , lens-aeson

@@ -3,12 +3,14 @@ module Shared.Utils where
 import           Control.Monad.Catch
 import           Data.Aeson
 import           Data.Aeson.Types     (Parser, parseEither)
-import qualified Data.ByteString.Lazy as Lazy
 import qualified Data.ByteString      as Strict
+import qualified Data.ByteString.Lazy as Lazy
 import           Data.Map.Strict      (Map)
 import qualified Data.Map.Strict      as Map
 import           Data.Typeable
-import Data.Yaml (decodeEither)
+import           Data.Yaml            (decodeEither)
+import           System.Directory     (getHomeDirectory)
+import           System.FilePath
 
 breakdown :: Integer -> [Integer] -> [Integer]
 breakdown n (x:xs) = (n `div` x):breakdown (n `mod` x) xs
@@ -20,18 +22,18 @@ expand m xs =
 
 parseThrow :: MonadThrow m => (a -> Parser b) -> a -> m b
 parseThrow p v = case parseEither p v of
-  Left err  -> throwM $ ParseError err
-  Right b -> return b
+  Left err -> throwM $ ParseError err
+  Right b  -> return b
 
 decodeThrow :: (MonadThrow m, FromJSON a) => Lazy.ByteString -> m a
 decodeThrow bs = case eitherDecode bs of
-  Left err  -> throwM $ ParseError err
-  Right a -> return a
+  Left err -> throwM $ ParseError err
+  Right a  -> return a
 
 decodeThrowYAML :: (MonadThrow m, FromJSON a) => Strict.ByteString -> m a
 decodeThrowYAML bs = case decodeEither bs of
-  Left err  -> throwM $ ParseError err
-  Right a -> return a
+  Left err -> throwM $ ParseError err
+  Right a  -> return a
 
 data ParseError = ParseError String deriving (Show, Typeable)
 
@@ -41,4 +43,11 @@ fromValueThrow :: (FromJSON a, MonadThrow m) => Value -> m a
 fromValueThrow value = case fromJSON value of
   Error err -> throwM $ ParseError err
   Success a -> return a
+
+expandFilePath :: FilePath -> IO FilePath
+expandFilePath path = joinPath <$> (expandDir `mapM` splitDirectories path)
+  where expandDir dir
+          | dir == "~" = getHomeDirectory
+          | dir == "$HOME" = getHomeDirectory
+          | otherwise = return dir
 

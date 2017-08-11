@@ -16,13 +16,15 @@ import           Data.Conduit.Lift
 import           Data.Tuple              (swap)
 
 import qualified Backend
+import           Shared.Utils            (expandFilePath)
 import           Tracker.State
 import           Tracker.Types           as Tracker
 
 
 withHandle :: Tracker.Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
 withHandle config backend cont = do
-  initState <- loadState $ statePath config
+  expandedStatePath <- expandFilePath (statePath config)
+  initState <- loadState expandedStatePath
   stateVar <- newMVar initState
   let h = Tracker.Handle
         { start = \partialKey time ->
@@ -42,12 +44,9 @@ withHandle config backend cont = do
         }
   result <- cont h
   finalState <- readMVar stateVar
-  unless (finalState == initState) $ saveState (statePath config) finalState
+  unless (finalState == initState) $ saveState expandedStatePath finalState
   return result
 
-
--- TODO: Want the more general:
--- modifyStateC :: MVar s -> Source (StateT s IO) r -> Sink r IO a -> IO a
 modifyStateC :: MVar s -> Source (StateT s IO) r -> Sink r IO () -> IO ()
 modifyStateC stateVar src sink =
   let f st = runConduit (runStateLC st src `fuseUpstream` sink)
