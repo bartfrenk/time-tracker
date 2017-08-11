@@ -6,6 +6,7 @@ module Console.Run where
 
 import           BasicPrelude
 import           Control.Monad.Trans (MonadIO, liftIO)
+import qualified Data.Conduit.List        as CL
 import qualified Data.Text           as T
 import           Data.Version        (showVersion)
 
@@ -36,4 +37,5 @@ review :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
 review tracker ts = liftIO $ Tracker.review tracker ts >>= printReview
 
 book :: MonadIO m => Tracker.Handle -> m ()
-book tracker = liftIO $ Tracker.book tracker >>= print
+book tracker = liftIO $ Tracker.book tracker printer
+  where printer = CL.mapM_ print

@@ -2,14 +2,17 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE RecordWildCards       #-}
+
 module Tracker (module Tracker) where
 
-import           BasicPrelude hiding (try)
+import           BasicPrelude            hiding (try)
 import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Conduit
+import           Data.Conduit.Lift
 import           Data.Tuple              (swap)
 
 import qualified Backend
@@ -33,14 +36,22 @@ withHandle config backend cont = do
         , review = \time ->
             let act = runReaderT (reviewM time) config
             in evalState act <$> readMVar stateVar
-        , book =
-            let act = runReaderT (bookM backend []) config
-            in modifyState stateVar act
+        , book = \sink ->
+            let src = runReaderC config (bookM backend)
+            in modifyStateC stateVar src sink
         }
   result <- cont h
   finalState <- readMVar stateVar
   unless (finalState == initState) $ saveState (statePath config) finalState
   return result
+
+
+-- TODO: Want the more general:
+-- modifyStateC :: MVar s -> Source (StateT s IO) r -> Sink r IO a -> IO a
+modifyStateC :: MVar s -> Source (StateT s IO) r -> Sink r IO () -> IO ()
+modifyStateC stateVar src sink =
+  let f st = runConduit (runStateLC st src `fuseUpstream` sink)
+  in modifyMVar stateVar ((swap `fmap`) <$> f)
 
 modifyState :: MVar s -> StateT s IO a -> IO a
 modifyState stateVar act =
@@ -51,7 +62,7 @@ data Handle = Handle
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
   , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
-  , book   :: IO ([LogItem], Maybe SomeException)
+  , book   :: Sink BookResult IO () -> IO ()
   }
 
 -- |Search JIRA for issues matching the JQL query.
@@ -95,18 +106,35 @@ reviewM ts = do
   activeLogItem <- readActiveLogItem ts
   return (logItems, activeLogItem)
 
+
+data BookResult
+  = Booked LogItem
+  | Discarded LogItem
+  | Failed SomeException
+  deriving (Show)
+
 bookM :: (MonadState LocalState m, MonadReader Tracker.Config m, MonadIO m, MonadCatch m)
-      => Backend.Handle -> [LogItem] -> m ([LogItem], Maybe SomeException)
-bookM backend booked = do
+      => Backend.Handle -> Source m BookResult
+bookM backend = do
   (rest, logItem') <- takeLogItem <$> get
   case logItem' of
-    Just logItem -> do
-      result <- try (liftIO $ Backend.book backend logItem)
-      case result of
-        Left exc -> return (booked, Just exc)
-        Right _ -> do
-          put rest
-          bookM backend (logItem : booked)
+    Just logItem ->
+      if canBeBooked logItem
+      then do
+        result <- try (liftIO $ Backend.book backend logItem)
+        case result of
+          Left exc -> yield $ Failed exc
+          Right _ -> do
+            put rest
+            yield (Booked logItem)
+            bookM backend
+      else do
+        put rest
+        yield (Discarded logItem)
+        bookM backend
     Nothing -> do
       put rest
-      return (booked, Nothing)
+      return ()
+
+canBeBooked :: LogItem -> Bool
+canBeBooked LogItem{..} = toSeconds timeSpent >= 60
