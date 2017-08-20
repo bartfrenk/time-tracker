@@ -36,6 +36,7 @@ runM tracker args = do
 process :: MonadIO m
         => Tracker.Handle -> Command -> m ()
 process _ Version                     = printVersion
+process tracker (Search jql)          = search jql
 process tracker (Start partialKey ts) = startIssue tracker partialKey ts
 process tracker (Stop ts)             = stopIssue tracker ts
 process tracker Review                = review tracker =<< getTimestamp

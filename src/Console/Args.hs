@@ -40,18 +40,17 @@ parseCommand config now = hsubparser $
   command "book" (parseBook `withInfo` "Book logged work")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
-parseStart config now = Start
+parseStart _ now = Start
   <$> argument auto (metavar "ISSUE")
   <*> timestampOption now
 
 -- |Optional time offset argument applied to `now`, defaults to 0.
 timestampOption :: Timestamp -> Parser Timestamp
-timestampOption now = addTimeDelta now <$> timeDeltaParser
-  where timeDeltaParser :: Parser TimeDelta
-        timeDeltaParser = option auto $ short 't' <> metavar "time" <> value mempty
+timestampOption now = addTimeDelta now <$>
+  option auto (short 't' <> metavar "time" <> value mempty)
 
 parseStop :: Console.Config -> Timestamp -> Parser Command
-parseStop config now = Stop
+parseStop _ now = Stop
   <$> timestampOption now
 
 parseBook :: Parser Command
