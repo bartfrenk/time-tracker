@@ -1,4 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Console.Args where
 
 import           BasicPrelude
@@ -11,7 +12,7 @@ import           Shared.Types
 import           Tracker.Types
 
 data Command
-  = Search JQL
+  = Search Text
   | Start PartialIssueKey Timestamp
   | Stop Timestamp
   | Review
@@ -37,7 +38,8 @@ parseCommand config now = hsubparser $
   command "start" (parseStart config now `withInfo` "Start work on an issue") <>
   command "stop" (parseStop config now `withInfo` "Stop work on active issue") <>
   command "review" (parseReview `withInfo` "Review logged work") <>
-  command "book" (parseBook `withInfo` "Book logged work")
+  command "book" (parseBook `withInfo` "Book logged work") <>
+  command "search" (parseSearch `withInfo` "Search issues")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart _ now = Start
@@ -47,7 +49,7 @@ parseStart _ now = Start
 -- |Optional time offset argument applied to `now`, defaults to 0.
 timestampOption :: Timestamp -> Parser Timestamp
 timestampOption now = addTimeDelta now <$>
-  option auto (short 't' <> metavar "time" <> value mempty)
+  option auto (short 't' <> metavar "TIME" <> value mempty)
 
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop _ now = Stop
@@ -59,7 +61,6 @@ parseBook = pure Book
 parseReview :: Parser Command
 parseReview = pure Review
 
-
-
-
-
+parseSearch :: Parser Command
+parseSearch = Search
+  <$> argument (T.pack <$> str) (metavar "QUERY")

@@ -45,6 +45,12 @@ newtype IssueKey = IssueKey { toText :: T.Text } deriving (Eq)
 
 newtype JQL = JQL T.Text deriving (Eq, Show)
 
+instance FromJSON JQL where
+  parseJSON = (JQL <$>) . parseJSON
+
+instance Read JQL where
+  readsPrec _ s = [(JQL (T.pack s), "")]
+
 newtype PartialIssueKey = PartialIssueKey Text
 
 instance Read PartialIssueKey where
@@ -115,6 +121,7 @@ data Config = Config
   { statePath      :: FilePath
   , defaultProject :: Text
   , issues         :: Map Text IssueKey
+  , queries        :: Map Text JQL
   } deriving (Show, Generic)
 
 instance FromJSON Config

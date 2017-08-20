@@ -1,6 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 module Console.Format where
 
 import           BasicPrelude
@@ -24,6 +25,15 @@ doc1 </$$> doc2 = doc1 </$> P.line <> doc2
 
 txt :: Text -> P.Doc
 txt = P.text . T.unpack
+
+printIssue :: MonadIO m => Issue -> m ()
+printIssue = liftIO . P.putDoc . formatIssue
+
+formatIssue :: Issue -> P.Doc
+formatIssue issue = txt
+  $ toText (issueKey (issue :: Issue)) <> "\t"
+  <> maybe "-" tshow (storyPoints issue) <> "\t"
+  <> summary issue <> "\n"
 
 printReview :: MonadIO m => ([LogItem], Maybe LogItem) -> m ()
 printReview (history, active) =

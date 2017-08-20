@@ -11,6 +11,7 @@ import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Control.Monad.State
+import qualified Data.Map.Strict as M
 import           Data.Conduit
 import           Data.Conduit.Lift
 import           Data.Tuple              (swap)
@@ -57,7 +58,7 @@ modifyState stateVar act =
   modifyMVar stateVar ((swap `fmap`) <$> runStateT act)
 
 data Handle = Handle
-  { search :: JQL -> Sink Issue IO () -> IO ()
+  { search :: Text -> Sink Issue IO () -> IO ()
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
   , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
@@ -66,15 +67,23 @@ data Handle = Handle
 
 -- |Search JIRA for issues matching the JQL query.
 searchM :: (MonadIO m, MonadReader Tracker.Config m)
-        => Backend.Handle -> JQL -> Sink Issue IO () -> m ()
-searchM backend jql sink =
+        => Backend.Handle -> Text -> Sink Issue IO () -> m ()
+searchM backend query sink = do
+  jql <- expandQuery query
   liftIO $ runConduit (searchConduit backend jql $= sink)
+
+-- |Looks up the key as a possible query alias, if none is found, return the key
+-- itself as a JQL query.
+expandQuery :: MonadReader Tracker.Config m => Text -> m JQL
+expandQuery key = do
+  aliases <- reader queries
+  return $ M.findWithDefault (JQL key) key aliases
 
 searchConduit :: Backend.Handle -> JQL -> Source IO Issue
 searchConduit backend jql = loop 0
   where
     fetch = Backend.search backend jql
-    limit = 2
+    limit = 1000
     loop offset = do
       fetchedIssues <- lift $ fetch (Backend.Page offset limit)
       mapM_ yield fetchedIssues

@@ -22,9 +22,8 @@ printVersion =
   liftIO $ putStrLn (T.pack $ showVersion version)
 
 startIssue :: MonadIO m => Tracker.Handle -> PartialIssueKey -> Timestamp -> m ()
-startIssue tracker partialKey ts = liftIO $ do
-  issue <- Tracker.start tracker partialKey ts
-  print issue
+startIssue tracker partialKey ts = liftIO $
+  Tracker.start tracker partialKey ts >>= printIssue
 
 stopIssue :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
 stopIssue tracker ts = liftIO $ do
@@ -39,3 +38,7 @@ review tracker ts = liftIO $ Tracker.review tracker ts >>= printReview
 book :: MonadIO m => Tracker.Handle -> m ()
 book tracker = liftIO $ Tracker.book tracker printer
   where printer = CL.mapM_ print
+
+search :: MonadIO m => Tracker.Handle -> Text -> m ()
+search tracker query = liftIO $ Tracker.search tracker query printer
+  where printer = CL.mapM_ printIssue
