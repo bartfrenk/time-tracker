@@ -2,13 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Console.Args where
 
-import           BasicPrelude
+import           BasicPrelude hiding (first)
 import           Control.Monad.Trans (MonadIO)
+import           Data.Bifunctor (first)
 import qualified Data.Text           as T
 import           Options.Applicative
 
 import           Console.Config      as Console
-import           Shared.Types
+import           Shared.Types        hiding (Parser)
 import           Tracker.Types
 
 data Command
@@ -44,16 +45,20 @@ parseCommand config now = hsubparser $
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart _ now = Start
   <$> argument auto (metavar "ISSUE")
-  <*> timestampOption now
+  <*> extendedTimestampOption now
 
--- |Optional time offset argument applied to `now`, defaults to 0.
-timestampOption :: Timestamp -> Parser Timestamp
-timestampOption now = addTimeDelta now <$>
-  option auto (short 't' <> metavar "TIME" <> value mempty)
+-- |Option for timestamp; the timestamp string consists of an optional local
+-- time, and an optional time difference string, e.g. '9:00 -1d' parses as
+-- yesterday 9:00 AM in the current time zone.
+extendedTimestampOption :: Timestamp -> Parser Timestamp
+extendedTimestampOption now =
+  option reader (short 't' <> metavar "TIME" <> value now)
+  where
+    reader = eitherReader (first show . fromExtendedTimestampString now)
 
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop _ now = Stop
-  <$> timestampOption now
+  <$> extendedTimestampOption now
 
 parseBook :: Parser Command
 parseBook = pure Book

@@ -1,14 +1,17 @@
+{-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StrictData        #-}
 
 module Shared.Types where
+-- TODO: specify public members
 
-import           BasicPrelude
-import qualified Data.Text           as T
+import           BasicPrelude          hiding (try, (<|>))
+import           Data.Functor.Identity
+import qualified Data.Text             as T
 import           Data.Time.Calendar
-import           Data.Time.Clock     (diffUTCTime, addUTCTime)
+import           Data.Time.Clock       (addUTCTime, diffUTCTime)
 import           Data.Time.Format
 import           Data.Time.LocalTime
 import           Text.Parsec
@@ -44,12 +47,11 @@ parsecToReadsPrec parsecParser _ input
         Right result -> [result]
 
 -- |Parser to convert strings of the form '1h3d2m1s' to seconds.
-timeDeltaParser :: Parsec String u TimeDelta
+timeDeltaParser :: Parsec String () TimeDelta
 timeDeltaParser = TimeDelta <$> directed
   where directed = (*) <$> minus <*> (sum <$> sepBy1 seconds whitespace)
         number = read . T.pack <$> many1 digit
         seconds = countSeconds <$> number <*> oneOf ['d', 'h', 'm', 's']
-        whitespace = many $ char ' '
         minus = option 1 (char '-' >> return (-1))
         countSeconds :: Integer -> Char -> Integer
         countSeconds n 'd' = n * 24 * 60 * 60
@@ -97,6 +99,54 @@ instance Ord Timestamp where
 instance Show Timestamp where
   show (Timestamp zt) =
     formatTime defaultTimeLocale timestampFormatStr zt
+
+fromExtendedTimestampString :: Timestamp -> String -> Either ParseError Timestamp
+fromExtendedTimestampString now = parse (extendedTimestampParser now) ""
+
+extendedTimestampParser :: Timestamp -> Parsec String () Timestamp
+extendedTimestampParser (Timestamp zt) = do
+  ts <- localTimestampParser zt
+  whitespace
+  delta <- try timeDeltaParser <|> return mempty
+  return $ addTimeDelta ts delta
+  where localTimestampParser (ZonedTime local tz) =
+          Timestamp <$> (ZonedTime <$> dateTimeParser local <*> pure tz)
+
+smallNumber :: CharStream s => Parser s Int
+smallNumber = read . T.pack <$> (try (count 2 digit) <|> count 1 digit)
+
+type CharStream s = Stream s Identity Char
+
+type Parser s = Parsec s ()
+
+whitespace :: CharStream s => Parser s ()
+whitespace = void $ many $ oneOf spaceChars
+
+spaceChars :: String
+spaceChars = " \n\t"
+
+dateTimeParser :: CharStream s => LocalTime -> Parser s LocalTime
+dateTimeParser (LocalTime day timeOfDay) = do
+  day' <- try dayParser <|> return day
+  whitespace
+  timeOfDay' <- try timeParser <|> return timeOfDay
+  return $ LocalTime day' timeOfDay'
+
+dayParser :: CharStream s => Parser s Day
+dayParser = do
+  year <- read . T.pack <$> count 4 digit
+  void (char '-')
+  month <- smallNumber
+  void (char '-')
+  day <- smallNumber
+  return $ fromGregorian year month day
+
+timeParser :: CharStream s => Parser s TimeOfDay
+timeParser = do
+  hour <- smallNumber
+  void (char ':')
+  minute <- smallNumber
+  return $ TimeOfDay hour minute 0
 
 instance Read Timestamp where
   readsPrec _ = \s -> first Timestamp <$> p s

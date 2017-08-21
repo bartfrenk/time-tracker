@@ -48,15 +48,19 @@ withHandle config backend cont = do
   unless (finalState == initState) $ saveState expandedStatePath finalState
   return result
 
+
+-- |Atomically modifies the MVar by the state action.
 modifyStateC :: MVar s -> Source (StateT s IO) r -> Sink r IO () -> IO ()
 modifyStateC stateVar src sink =
   let f st = runConduit (runStateLC st src `fuseUpstream` sink)
   in modifyMVar stateVar ((swap `fmap`) <$> f)
 
+-- |Atomically modifies the MVar by the state action.
 modifyState :: MVar s -> StateT s IO a -> IO a
 modifyState stateVar act =
   modifyMVar stateVar ((swap `fmap`) <$> runStateT act)
 
+-- |Interface for the Tracker service.
 data Handle = Handle
   { search :: Text -> Sink Issue IO () -> IO ()
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
@@ -72,13 +76,14 @@ searchM backend query sink = do
   jql <- expandQuery query
   liftIO $ runConduit (searchConduit backend jql $= sink)
 
--- |Looks up the key as a possible query alias, if none is found, return the key
+-- |Looks up the key as a possible query alias, if none is found, returns the key
 -- itself as a JQL query.
 expandQuery :: MonadReader Tracker.Config m => Text -> m JQL
 expandQuery key = do
   aliases <- reader queries
   return $ M.findWithDefault (JQL key) key aliases
 
+-- |Returns a source of issues that match the specified query.
 searchConduit :: Backend.Handle -> JQL -> Source IO Issue
 searchConduit backend jql = loop 0
   where
@@ -115,12 +120,19 @@ reviewM ts = do
   return (logItems, activeLogItem)
 
 
+-- |The result of booking a work log item to a backend. Constructors `Booked`
+-- and `Failed` are straightforward. A result of `Discarded` means that the log
+-- item was not sent, for example, when less time on it was spent then required
+-- for the backend.
 data BookResult
   = Booked LogItem
   | Discarded LogItem
   | Failed SomeException
   deriving (Show)
 
+
+-- |Books all locally outstanding work log items via the backend (e.g. JIRA),
+-- and returns a source in which the result of each individual booking is placed.
 bookM :: (MonadState LocalState m, MonadReader Tracker.Config m, MonadIO m, MonadCatch m)
       => Backend.Handle -> Source m BookResult
 bookM backend = do
