@@ -1,0 +1,19 @@
+backend:
+  baseURL:
+  user:
+  password:
+tracker:
+  queries:
+    active: >-
+      sprint in openSprints()
+      and sprint not in futureSprints()
+      and project=<project-name>
+    all: >-
+      project=<project-name>
+  statePath: ~/.track/state.log
+  defaultProject:
+  issues:
+console:
+  aliases:
+    st: review
+    ls: search active
