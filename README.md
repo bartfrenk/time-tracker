@@ -24,7 +24,15 @@ stack build
 stack install
 ```
 
-This builds the executable and copies it to a central location (on my system: ~/.local/bin).
+This builds the executable and copies it to a central location (on my system:
+~/.local/bin). Then copy `res/config.yaml` to `~/.track.yaml`, and fill in the
+remaining details. Finally, create the directory to hold the local state:
+
+```bash
+mkdir ~/.track
+```
+
+## Run
 
 To get help on the available commands, run
 
