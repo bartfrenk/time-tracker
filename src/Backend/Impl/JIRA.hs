@@ -36,6 +36,7 @@ import           Network.HTTP.Types.Status (notFound404, ok200)
 
 import           Backend
 import           Shared.Client             as Client
+import           Shared.Types              (toDurationList)
 import           Shared.Utils              (decodeThrow, parseThrow)
 import           Tracker.Types
 
@@ -113,7 +114,7 @@ mkBookRequest LogItem{..} = do
  where
     payload = M.fromList [
         ("started", toJSON $ formatTimestamp defaultTimeLocale formatStr started),
-        ("timeSpent", toJSON $ show timeSpent)]
+        ("timeSpent", toJSON $ unwords (toDurationList timeSpent))]
     formatStr = iso8601DateFormat (Just "%H:%M:%S.000%z")
 
 bookM :: (MonadClient m) => LogItem -> m ()
