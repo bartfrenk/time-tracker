@@ -3,14 +3,18 @@
 Tracks time spent on JIRA issues. Example workflow:
 
 ```bash
-track start PROJECT-3145
 # work on issue PROJECT-3145
-track start 2718
-# work on issue 2718 in the configurable default project
+track start PROJECT-3145
+# started work on issue 2718 in the configurable default project 30 minutes ago
+track start 2718 -t -30m
 track stop
 track review
 track book
 ```
+
+The `start` and `stop` commands update the local log, the `review` command
+displays the local log by day, and the `book` command attempts to push the local log to
+JIRA and clears all local items that were sucessfully pushed.
 
 ## Setup
 
@@ -20,6 +24,7 @@ To set up, clone the repository and run
 
 ```bash
 cd time-tracker
+stack setup
 stack build
 stack install
 ```

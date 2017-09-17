@@ -52,7 +52,15 @@ parseStart _ now = Start
 -- yesterday 9:00 AM in the current time zone.
 extendedTimestampOption :: Timestamp -> Parser Timestamp
 extendedTimestampOption now =
-  option reader (short 't' <> metavar "TIME" <> value now)
+  option reader
+     ( short 't'
+    <> metavar "TIME"
+    <> value now
+    <> help "Optional custom timestamp. The value consists of the base time \
+            \and an offset. Both are optional. For example, '9:00 -1d' parses \
+            \as yesterday 9:00 AM in the current time zone, and \
+            \'2017-09-16 10:00 +1d4h' parses as 2:00 AM on 2017-09-17."
+     )
   where
     reader = eitherReader (first show . fromExtendedTimestampString now)
 

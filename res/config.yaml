@@ -1,8 +1,13 @@
 backend:
+  # baseURL of the JIRA server, this is usually just the host name
   baseURL:
+  # user name of the JIRA account
   user:
+  # password of the JIRA account
   password:
 tracker:
+  # map of aliases for JQL queries; these can be used where a JQL query is
+  # expected.
   queries:
     active: >-
       sprint in openSprints()
@@ -10,10 +15,15 @@ tracker:
       and project=<project-name>
     all: >-
       project=<project-name>
+  # location of the file that stores the local log
   statePath: ~/.track/state.log
+  # default project prefix used for start command whenever only the issue
+  # number is specified
   defaultProject:
+  # map of aliases to issue keys
   issues:
 console:
+  # aliases for command, e.g. 'track ls' is expanded to 'track search active'
   aliases:
     st: review
     ls: search active
