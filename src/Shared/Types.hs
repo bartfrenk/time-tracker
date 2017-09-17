@@ -52,7 +52,7 @@ timeDeltaParser = TimeDelta <$> directed
   where directed = (*) <$> minus <*> (sum <$> sepBy1 seconds whitespace)
         number = read . T.pack <$> many1 digit
         seconds = countSeconds <$> number <*> oneOf ['d', 'h', 'm', 's']
-        minus = option 1 (char '-' >> return (-1))
+        minus = option 1 ((char '-' >> return (-1)) <|> (char '+' >> return 1))
         countSeconds :: Integer -> Char -> Integer
         countSeconds n 'd' = n * 24 * 60 * 60
         countSeconds n 'h' = n * 60 * 60
