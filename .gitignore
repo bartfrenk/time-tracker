@@ -1,4 +1,4 @@
-src/Scratch.hs
+**/Scratch.hs
 *.log
 dist/
 TAGS
