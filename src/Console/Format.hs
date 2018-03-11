@@ -35,8 +35,8 @@ formatIssue issue = txt
   <> maybe "-" tshow (storyPoints issue) <> "\t"
   <> summary issue <> "\n"
 
-printReview :: MonadIO m => ([LogItem], Maybe LogItem) -> m ()
-printReview (history, active) =
+printFullStatus :: MonadIO m => ([LogItem], Maybe LogItem) -> m ()
+printFullStatus (history, active) =
   let historyText = logItemToText <$> history
       activeText = logItemToText <$> active
       formatFn = mkFormatFn "  " $ historyText <> maybeToList activeText
@@ -45,6 +45,14 @@ printReview (history, active) =
          formatHistory formatFn history </$$>
          formatActive formatFn active
        ) </$$> P.empty
+
+printActiveIssue :: MonadIO m => ([LogItem], Maybe LogItem) -> m ()
+printActiveIssue (_, active') =
+  case active' of
+    Nothing -> liftIO $ P.putDoc P.empty
+    Just active -> do
+      let [k, _, _] = logItemToText active
+      liftIO $ P.putDoc $ (txt k) </$> P.empty
 
 formatActive :: ([Text] -> P.Doc) -> Maybe LogItem -> P.Doc
 formatActive _ Nothing = "No active issue"

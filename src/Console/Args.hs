@@ -12,11 +12,16 @@ import           Console.Config      as Console
 import           Shared.Types        hiding (Parser)
 import           Tracker.Types
 
+data StatusType
+  = FullStatus
+  | ActiveIssue
+  deriving (Show)
+
 data Command
   = Search Text
   | Start PartialIssueKey Timestamp
   | Stop Timestamp
-  | Review
+  | Status StatusType
   | Book
   | Version
   deriving (Show)
@@ -38,7 +43,7 @@ parseCommand :: Console.Config -> Timestamp -> Parser Command
 parseCommand config now = hsubparser $
   command "start" (parseStart config now `withInfo` "Start work on an issue") <>
   command "stop" (parseStop config now `withInfo` "Stop work on active issue") <>
-  command "review" (parseReview `withInfo` "Review logged work") <>
+  command "status" (parseStatus `withInfo` "Display status of logged work") <>
   command "book" (parseBook `withInfo` "Book logged work") <>
   command "search" (parseSearch `withInfo` "Search issues")
 
@@ -71,8 +76,10 @@ parseStop _ now = Stop
 parseBook :: Parser Command
 parseBook = pure Book
 
-parseReview :: Parser Command
-parseReview = pure Review
+parseStatus :: Parser Command
+parseStatus = Status <$>
+  flag FullStatus ActiveIssue
+     (long "active" <> help "Display only the active issue")
 
 parseSearch :: Parser Command
 parseSearch = Search

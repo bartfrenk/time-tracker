@@ -36,8 +36,8 @@ withHandle config backend cont = do
             in modifyState stateVar act
         , search = \jql sink ->
             runReaderT (searchM backend jql sink) config
-        , review = \time ->
-            let act = runReaderT (reviewM time) config
+        , status = \time ->
+            let act = runReaderT (statusM time) config
             in evalState act <$> readMVar stateVar
         , book = \sink ->
             let src = runReaderC config (bookM backend)
@@ -65,7 +65,7 @@ data Handle = Handle
   { search :: Text -> Sink Issue IO () -> IO ()
   , start  :: PartialIssueKey -> Timestamp -> IO Issue
   , stop   :: Timestamp -> IO (Maybe LogItem)
-  , review :: Timestamp -> IO ([LogItem], Maybe LogItem)
+  , status :: Timestamp -> IO ([LogItem], Maybe LogItem)
   , book   :: Sink BookResult IO () -> IO ()
   }
 
@@ -112,9 +112,9 @@ stopM ts = do
   appendEvent (Stopped ts)
   readLastLogItem
 
-reviewM :: (MonadState LocalState m, MonadReader Tracker.Config m)
+statusM :: (MonadState LocalState m, MonadReader Tracker.Config m)
         => Timestamp -> m ([LogItem], Maybe LogItem)
-reviewM ts = do
+statusM ts = do
   logItems <- gets (snd . takeAllLogItems)
   activeLogItem <- readActiveLogItem ts
   return (logItems, activeLogItem)
@@ -135,13 +135,13 @@ data BookResult
 -- and returns a source in which the result of each individual booking is placed.
 bookM :: (MonadState LocalState m, MonadReader Tracker.Config m, MonadIO m, MonadCatch m)
       => Backend.Handle -> Source m BookResult
-bookM backend = do
+bookM backend@Backend.Handle{..} = do
   (rest, logItem') <- takeLogItem <$> get
   case logItem' of
     Just logItem ->
       if canBeBooked logItem
       then do
-        result <- try (liftIO $ Backend.book backend logItem)
+        result <- try (liftIO $ book logItem)
         case result of
           Left exc -> yield $ Failed exc
           Right _ -> do

@@ -1,17 +1,16 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 module Console.Run where
 
 import           BasicPrelude
 import           Control.Monad.Trans (MonadIO, liftIO)
-import qualified Data.Conduit.List        as CL
+import qualified Data.Conduit.List   as CL
 import qualified Data.Text           as T
 import           Data.Version        (showVersion)
 
 import           Paths_time_tracker  (version)
 
+import           Console.Args        (StatusType(..))
 import           Console.Format
 import           Shared.Types
 import           Tracker
@@ -32,8 +31,12 @@ stopIssue tracker ts = liftIO $ do
     Just item -> print item
     Nothing   -> return ()
 
-review :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
-review tracker ts = liftIO $ Tracker.review tracker ts >>= printReview
+status :: MonadIO m => Tracker.Handle -> StatusType -> Timestamp -> m ()
+status tracker ty ts = do
+  st <- liftIO $ Tracker.status tracker ts
+  case ty of
+    FullStatus -> printFullStatus st
+    ActiveIssue -> printActiveIssue st
 
 book :: MonadIO m => Tracker.Handle -> m ()
 book tracker = liftIO $ Tracker.book tracker printer

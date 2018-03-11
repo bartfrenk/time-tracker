@@ -13,6 +13,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
+  extensions:          RecordWildCards
+                       NamedFieldPuns
+                       OverloadedStrings
+                       DuplicateRecordFields
   other-modules:       Backend
                        Console.Args
                        Console.Config
