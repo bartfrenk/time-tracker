@@ -5,7 +5,8 @@
 
 * Contents
 ** Roadmap
-*** TODO Make functionality to automatically stop issues at some prespecified time
+*** DONE Make functionality to automatically stop issues at some prespecified time
+CLOSED: [2018-05-07 Mon 23:43]
 
 Given a log with entries spanning some longer time between afternoon and
 morning. The command
