@@ -47,4 +47,4 @@ track --help
 
 ## Project
 
-Project administration is in a separate [[project.org][./docs/project.org]] file.
+Project administration is in a separate [project.org](./docs/project.org) file.
