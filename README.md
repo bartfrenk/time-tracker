@@ -44,3 +44,7 @@ To get help on the available commands, run
 ```bash
 track --help
 ```
+
+## Project
+
+Project administration is in a separate [[project.org][./docs/project.org]] file.

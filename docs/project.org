@@ -1,0 +1,20 @@
+#+TITLE: Project file for TimeTracker project
+#+AUTHOR: Bart Frenk
+#+EMAIL: bart.frenk@gmail.com
+
+
+* Contents
+** Roadmap
+*** TODO Make functionality to automatically stop issues at some prespecified time
+
+Given a log with entries spanning some longer time between afternoon and
+morning. The command
+
+#+BEGIN_SRC sh
+track close
+#+END_SRC
+
+automatically stops them at the specified time (e.g., 17:30, but configurable)
+
+
+
