@@ -7,7 +7,6 @@ module Backend
   , Page(..)
   ) where
 
-
 import           BasicPrelude
 
 import           Tracker.Types

@@ -20,6 +20,7 @@ module Tracker.Types
   , mkIssueKey
   , completeToIssueKey
   , Config(..)
+  , Event(..)
   ) where
 
 import           BasicPrelude         hiding (lookup, (<|>))
@@ -40,6 +41,10 @@ data TrackerException
   deriving (Show, Typeable)
 
 instance Exception TrackerException
+
+data Event
+  = Started Timestamp IssueKey
+  | Stopped Timestamp deriving (Eq, Show, Read)
 
 newtype IssueKey = IssueKey { toText :: T.Text } deriving (Eq)
 
@@ -120,6 +125,7 @@ data LogItem = LogItem
 data Config = Config
   { statePath      :: FilePath
   , defaultProject :: Text
+  , stopAt         :: TimeOfDay
   , issues         :: Map Text IssueKey
   , queries        :: Map Text JQL
   } deriving (Show, Generic)

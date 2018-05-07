@@ -45,3 +45,8 @@ book tracker = liftIO $ Tracker.book tracker printer
 search :: MonadIO m => Tracker.Handle -> Text -> m ()
 search tracker query = liftIO $ Tracker.search tracker query printer
   where printer = CL.mapM_ printIssue
+
+close :: MonadIO m => Tracker.Handle -> m ()
+close tracker = do
+  events <- liftIO $ Tracker.close tracker
+  printEvents events

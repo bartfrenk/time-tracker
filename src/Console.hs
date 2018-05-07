@@ -38,3 +38,4 @@ process tracker (Start partialKey ts) = startIssue tracker partialKey ts
 process tracker (Stop ts)             = stopIssue tracker ts
 process tracker (Status ty)           = status tracker ty =<< getTimestamp
 process tracker Book                  = book tracker
+process tracker Close                 = close tracker

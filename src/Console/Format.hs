@@ -54,6 +54,10 @@ printActiveIssue (_, active') =
       let [k, _, _] = logItemToText active
       liftIO $ P.putDoc $ (txt k) </$> P.empty
 
+printEvents :: MonadIO m => [Event] -> m ()
+printEvents es =
+  liftIO $ putStrLn (tshow es)
+
 formatActive :: ([Text] -> P.Doc) -> Maybe LogItem -> P.Doc
 formatActive _ Nothing = "No active issue"
 formatActive formatFn (Just active) =

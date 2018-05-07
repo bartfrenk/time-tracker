@@ -24,6 +24,7 @@ data Command
   | Status StatusType
   | Book
   | Version
+  | Close
   deriving (Show)
 
 runParser :: MonadIO m => Console.Config -> [Text] -> m Command
@@ -45,7 +46,9 @@ parseCommand config now = hsubparser $
   command "stop" (parseStop config now `withInfo` "Stop work on active issue") <>
   command "status" (parseStatus `withInfo` "Display status of logged work") <>
   command "book" (parseBook `withInfo` "Book logged work") <>
-  command "search" (parseSearch `withInfo` "Search issues")
+  command "search" (parseSearch `withInfo` "Search issues") <>
+  command "close" (parseClose `withInfo`
+                   "Truncate logging on issues that run past the `stopAt` time")
 
 parseStart :: Console.Config -> Timestamp -> Parser Command
 parseStart _ now = Start
@@ -68,6 +71,9 @@ extendedTimestampOption now =
      )
   where
     reader = eitherReader (first show . fromExtendedTimestampString now)
+
+parseClose :: Parser Command
+parseClose = pure Close
 
 parseStop :: Console.Config -> Timestamp -> Parser Command
 parseStop _ now = Stop
