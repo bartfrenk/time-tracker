@@ -22,6 +22,8 @@ tracker:
   defaultProject:
   # map of aliases to issue keys
   issues:
+  # time at which to truncate issues when calling the `close` command
+  stopAt: 17:30
 console:
   # aliases for command, e.g. 'track ls' is expanded to 'track search active'
   aliases:
