@@ -5,6 +5,7 @@
 
 * Contents
 ** Roadmap
+** Completed
 *** DONE Make functionality to automatically stop issues at some prespecified time
 CLOSED: [2018-05-07 Mon 23:43]
 
