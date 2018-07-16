@@ -174,7 +174,7 @@ bookM backend@Backend.Handle {..} = do
     Just logItem ->
       if canBeBooked logItem
         then do
-          result <- try (liftIO $ book logItem)
+          result <- liftIO $ try $ book logItem
           case result of
             Left exc -> yield $ Failed exc
             Right _ -> do

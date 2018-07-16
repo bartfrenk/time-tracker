@@ -10,7 +10,6 @@ module Tracker.Types
   , PartialIssueKey
   , TrackerException(..)
   , toText
-
   , Issue(..)
   , LogItem(..)
   , Timestamp(..)
@@ -43,12 +42,18 @@ data TrackerException
 instance Exception TrackerException
 
 data Event
-  = Started Timestamp IssueKey
-  | Stopped Timestamp deriving (Eq, Show, Read)
+  = Started Timestamp
+            IssueKey
+  | Stopped Timestamp
+  deriving (Eq, Show, Read)
 
-newtype IssueKey = IssueKey { toText :: T.Text } deriving (Eq)
+newtype IssueKey = IssueKey
+  { toText :: T.Text
+  } deriving (Eq)
 
-newtype JQL = JQL T.Text deriving (Eq, Show)
+newtype JQL =
+  JQL T.Text
+  deriving (Eq, Show)
 
 instance FromJSON JQL where
   parseJSON = (JQL <$>) . parseJSON
@@ -56,7 +61,8 @@ instance FromJSON JQL where
 instance Read JQL where
   readsPrec _ s = [(JQL (T.pack s), "")]
 
-newtype PartialIssueKey = PartialIssueKey Text
+newtype PartialIssueKey =
+  PartialIssueKey Text
 
 instance Read PartialIssueKey where
   readsPrec _ s =
@@ -69,7 +75,9 @@ instance Show PartialIssueKey where
 expandIssueAliases :: MonadReader Config m => Text -> m (Maybe IssueKey)
 expandIssueAliases t = lookup t <$> reader issues
 
-completeToIssueKey :: (MonadThrow m, MonadReader Config m) => PartialIssueKey -> m IssueKey
+-- | Completes the partial issue key to a project-qualified issue key.
+completeToIssueKey ::
+     (MonadThrow m, MonadReader Config m) => PartialIssueKey -> m IssueKey
 completeToIssueKey (PartialIssueKey t) = do
   issueKey' <- expandIssueAliases t
   case issueKey' of
@@ -80,12 +88,13 @@ parseIssueKey :: (MonadThrow m, MonadReader Config m) => Text -> m IssueKey
 parseIssueKey t = do
   project <- reader defaultProject
   case parse (issueKeyParser project) "" (T.unpack t) of
-    Left _  -> throwM $ InvalidIssueKey t
+    Left _ -> throwM $ InvalidIssueKey t
     Right res -> return res
 
 issueKeyParser :: Text -> Parsec String u IssueKey
 issueKeyParser defaultPrefix = do
-  project <-  many1 (satisfy isAlpha) <* char '-' <|> return (T.unpack defaultPrefix)
+  project <-
+    many1 (satisfy isAlpha) <* char '-' <|> return (T.unpack defaultPrefix)
   index <- many1 digit
   return $ mkIssueKey $ T.pack (project ++ "-" ++ index)
 
@@ -114,6 +123,7 @@ data Issue = Issue
   } deriving (Eq, Generic, Show)
 
 instance FromJSON Issue
+
 instance ToJSON Issue
 
 data LogItem = LogItem
@@ -131,4 +141,3 @@ data Config = Config
   } deriving (Show, Generic)
 
 instance FromJSON Config
-
