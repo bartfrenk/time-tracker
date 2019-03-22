@@ -43,6 +43,7 @@ library
                      , exceptions
                      , filepath
                      , http-client
+                     , http-client-tls
                      , http-types
                      , lens
                      , lens-aeson

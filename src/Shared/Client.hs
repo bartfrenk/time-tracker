@@ -17,17 +17,18 @@ import           BasicPrelude
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Data.Aeson
-import qualified Data.ByteString.Char8  as C8
-import qualified Data.ByteString.Lazy   as Lazy
-import           Data.String.Conv       (toS)
+import qualified Data.ByteString.Char8   as C8
+import qualified Data.ByteString.Lazy    as Lazy
+import           Data.String.Conv        (toS)
 import           GHC.Generics
 import           Network.HTTP.Client
+import           Network.HTTP.Client.TLS (tlsManagerSettings)
 import           Network.HTTP.Types.URI
 
 
 mkDefaultClientEnv :: Config -> IO ClientEnv
 mkDefaultClientEnv config =
-  ClientEnv config <$> newManager defaultManagerSettings
+  ClientEnv config <$> newManager tlsManagerSettings
 
 data Config = Config
   { baseURL  :: String,
