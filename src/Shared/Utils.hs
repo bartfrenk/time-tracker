@@ -1,5 +1,6 @@
 module Shared.Utils where
 
+import           BasicPrelude
 import           Control.Monad.Catch
 import           Data.Aeson
 import           Data.Aeson.Types     (Parser, parseEither)
@@ -7,7 +8,6 @@ import qualified Data.ByteString      as Strict
 import qualified Data.ByteString.Lazy as Lazy
 import           Data.Map.Strict      (Map)
 import qualified Data.Map.Strict      as Map
-import           Data.Typeable
 import           Data.Yaml            (decodeEither)
 import           System.Directory     (getHomeDirectory)
 import           System.FilePath

@@ -1,0 +1,82 @@
+name: time-tracker
+version: 0.2.3.0
+license: BSD3
+author: "Bart Frenk"
+maintainer: "bart.frenk@gmail.com"
+copyright: "2019 Bart Frenk"
+
+description: >-
+  Please see the README on GitHub at
+  <https://github.com/bartfrenk/time-tracker#readme>
+
+extra-source-files:
+  - README.md
+  - LICENSE
+
+ghc-options:
+  - -Wall
+  - -Werror
+  - -fno-warn-name-shadowing
+
+default-extensions:
+  - NoImplicitPrelude
+  - ConstraintKinds
+  - FlexibleContexts
+  - LambdaCase
+  - BangPatterns
+  - MultiWayIf
+  - RecordWildCards
+  - NamedFieldPuns
+  - DeriveFunctor
+  - TupleSections
+  - FlexibleInstances
+  - OverloadedStrings
+  - GeneralizedNewtypeDeriving
+  - BangPatterns
+  - StandaloneDeriving
+  - TypeFamilies
+  - StrictData
+  - GADTs
+  - DeriveGeneric
+  - MultiParamTypeClasses
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - basic-prelude
+  - bytestring
+  - directory
+  - exceptions
+  - lens
+  - lens-aeson
+  - mtl
+  - string-conv
+  - yaml
+
+library:
+  source-dirs: src
+  dependencies:
+    - ansi-wl-pprint
+    - attoparsec
+    - conduit
+    - containers
+    - filepath
+    - http-client
+    - http-client-tls
+    - http-types
+    - optparse-applicative
+    - parsec
+    - safe
+    - text
+    - time
+    - unordered-containers
+
+executables:
+  track:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - managed
+      - time-tracker
+
+

@@ -1,17 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-
-{-# LANGUAGE ConstraintKinds       #-}
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE StrictData            #-}
-{-# LANGUAGE TypeOperators         #-}
-
+{-# LANGUAGE NoImplicitPrelude #-}
 module Backend.Impl.JIRA
   ( Handle
   , withHandle
@@ -19,7 +6,7 @@ module Backend.Impl.JIRA
   , Client.Config(..))
   where
 
-import           BasicPrelude              hiding (try)
+import           BasicPrelude
 import           Control.Lens
 import           Control.Monad             (unless, (>=>))
 import           Control.Monad.Catch

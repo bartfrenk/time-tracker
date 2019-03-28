@@ -1,7 +1,3 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Tracker.State where
 
 import           Control.Exception
@@ -11,11 +7,10 @@ import           Control.Monad.Trans (MonadIO)
 import           Data.Bifunctor      (first)
 import           Data.Time.LocalTime hiding (TimeOfDay)
 import           Data.Typeable
+import           Prelude
 import           Safe
 import           System.Directory    (doesFileExist)
 import           Text.Read           hiding (get)
-
-import Debug.Trace
 
 import           Shared.Types
 import           Tracker.Types
@@ -136,7 +131,7 @@ closeForgotten now t = do
       let es = insertBetween e1 e2
           (events, inserted) = insertStops (e2:rest)
       in ([e1] ++ es ++ events, es ++ inserted)
-    insertStops es@[(Started start _)] =
+    insertStops es@[Started start _] =
       case timeWithin t start now of
         Nothing -> (es, [])
         Just new -> (es ++ [Stopped new], [Stopped new])

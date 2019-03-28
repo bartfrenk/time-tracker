@@ -8,12 +8,12 @@ module Tracker
   ( module Tracker
   ) where
 
-import           BasicPrelude            hiding (try)
+import           BasicPrelude
 import           Control.Concurrent.MVar
 import           Control.Monad.Catch
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.Conduit
+import           Data.Conduit hiding (Sink, Source)
 import           Data.Conduit.Lift
 import qualified Data.Map.Strict         as M
 import           Data.Tuple              (swap)
@@ -23,6 +23,9 @@ import           Shared.Types            (getTimestamp)
 import           Shared.Utils            (expandFilePath)
 import           Tracker.State
 import           Tracker.Types           as Tracker
+
+type Sink i = ConduitT i Void
+type Source m o = ConduitT () o m ()
 
 withHandle ::
      Tracker.Config -> Backend.Handle -> (Tracker.Handle -> IO a) -> IO a
@@ -87,7 +90,7 @@ searchM ::
   -> m ()
 searchM backend query sink = do
   jql <- expandQuery query
-  liftIO $ runConduit (searchConduit backend jql $= sink)
+  liftIO $ runConduit (searchConduit backend jql .| sink)
 
 -- |Looks up the key as a possible query alias, if none is found, returns the key
 -- itself as a JQL query.

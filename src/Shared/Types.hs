@@ -1,15 +1,8 @@
-{-# LANGUAGE ConstraintKinds   #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE StrictData        #-}
-
 module Shared.Types where
 
 -- TODO: specify public members
 import Control.Arrow
-import           BasicPrelude          hiding (try, (<|>))
+import           BasicPrelude          hiding ((<|>))
 import           Data.Aeson
 import           Data.Functor.Identity
 import qualified Data.Text             as T
