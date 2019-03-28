@@ -27,9 +27,7 @@ startIssue tracker partialKey ts = liftIO $
 stopIssue :: MonadIO m => Tracker.Handle -> Timestamp -> m ()
 stopIssue tracker ts = liftIO $ do
   item' <- Tracker.stop tracker ts
-  case item' of
-    Just item -> print item
-    Nothing   -> return ()
+  forM_ item' print
 
 status :: MonadIO m => Tracker.Handle -> StatusType -> Timestamp -> m ()
 status tracker ty ts = do
