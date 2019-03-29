@@ -1,12 +1,6 @@
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
 module Tracker.Types
-  ( IssueKey
+  ( IssueKey(..)
+  , toText
   , PartialIssueKey
   , TrackerException(..)
   , toText

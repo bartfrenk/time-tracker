@@ -1,13 +1,18 @@
 module Shared.Utils where
 
 import           BasicPrelude
+
+
+import           Control.Lens         ((^?))
 import           Control.Monad.Catch
 import           Data.Aeson
+import           Data.Aeson.Lens      (key)
 import           Data.Aeson.Types     (Parser, parseEither)
 import qualified Data.ByteString      as Strict
 import qualified Data.ByteString.Lazy as Lazy
 import           Data.Map.Strict      (Map)
 import qualified Data.Map.Strict      as Map
+import           Data.String.Conv     (toS)
 import           Data.Yaml            (decodeEither)
 import           System.Directory     (getHomeDirectory)
 import           System.FilePath
@@ -35,7 +40,7 @@ decodeThrowYAML bs = case decodeEither bs of
   Left err -> throwM $ ParseError err
   Right a  -> return a
 
-data ParseError = ParseError String deriving (Show, Typeable)
+newtype ParseError = ParseError String deriving (Show, Typeable)
 
 instance Exception ParseError
 
@@ -51,3 +56,7 @@ expandFilePath path = joinPath <$> (expandDir `mapM` splitDirectories path)
           | dir == "$HOME" = getHomeDirectory
           | otherwise = return dir
 
+fromConfig :: (FromJSON a, MonadThrow m) => Value -> Text -> m a
+fromConfig config sub = case config ^? key sub of
+  Nothing    -> throwM $ ParseError $ "key '" ++ toS sub ++ "' not present"
+  Just value -> fromValueThrow value

@@ -14,7 +14,7 @@ import           Shared.Types
 import           Shared.Utils         (expand)
 import qualified Tracker
 
-data Handle = Handle
+newtype Handle = Handle
   { run :: [Text] -> IO ()
   }
 

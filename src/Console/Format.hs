@@ -52,7 +52,7 @@ printActiveIssue (_, active') =
     Nothing -> liftIO $ P.putDoc P.empty
     Just active -> do
       let [k, _, _] = logItemToText active
-      liftIO $ P.putDoc $ (txt k) </$> P.empty
+      liftIO $ P.putDoc $ txt k </$> P.empty
 
 printEvents :: MonadIO m => [Event] -> m ()
 printEvents es =

@@ -158,8 +158,7 @@ dayParser = do
   void (char '-')
   month <- smallNumber
   void (char '-')
-  day <- smallNumber
-  return $ fromGregorian year month day
+  fromGregorian year month <$> smallNumber
 
 timeParser :: CharStream s => Parser s L.TimeOfDay
 timeParser = do
@@ -169,7 +168,7 @@ timeParser = do
   return $ L.TimeOfDay hour minute 0
 
 instance Read Timestamp where
-  readsPrec _ = \s -> first Timestamp <$> p s
+  readsPrec _ = fmap (first Timestamp) . p
     where
       p = readSTime False defaultTimeLocale timestampFormatStr
 
