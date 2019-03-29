@@ -8,13 +8,14 @@ track start PROJECT-3145
 # started work on issue 2718 in the configurable default project 30 minutes ago
 track start 2718 -t -30m
 track stop
-track review
+track status
 track book
 ```
 
-The `start` and `stop` commands update the local log, the `review` command
-displays the local log by day, and the `book` command attempts to push the local log to
-JIRA and clears all local items that were sucessfully pushed.
+The `start` and `stop` commands update the local log, the `status` command
+displays the local log by day, and the `book` command attempts to push the local
+log to the configured backends (e.g., JIRA, a archive file on your machine) and
+clears all local items that were succesfully pushed.
 
 ## Setup
 
@@ -29,9 +30,10 @@ stack build
 stack install
 ```
 
-This builds the executable and copies it to a central location (on my system:
-~/.local/bin). Then copy `res/config.yaml` to `~/.track.yaml`, and fill in the
-remaining details. Finally, create the directory to hold the local state:
+This builds the executable and copies it to a central location determined by
+stack (on my system: ~/.local/bin). Then copy `res/config.yaml` to
+`~/.track.yaml`, and fill in the remaining details. Finally, create the
+directory to hold the local state:
 
 ```bash
 mkdir ~/.track
