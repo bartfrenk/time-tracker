@@ -1,10 +1,16 @@
 backend:
-  # baseURL of the JIRA server, this is usually just the host name
-  baseURL:
-  # user name of the JIRA account
-  user:
-  # password of the JIRA account
-  password:
+  jira:
+    # baseURL of the JIRA server, this is usually just the host name
+    baseURL:
+    # user name of the JIRA account
+    user:
+    # password of the JIRA account
+    password:
+  archive:
+    # location of the file that stores the archive
+    archivePath:
+    # optional time format string to print start and end times to the archive
+    timeFormat:
 tracker:
   # map of aliases for JQL queries; these can be used where a JQL query is
   # expected.
